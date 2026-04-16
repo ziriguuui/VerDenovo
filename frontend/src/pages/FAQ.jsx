@@ -17,6 +17,7 @@ function FAQ() {
   const [isInitialLoad, setIsInitialLoad] = useState(true);
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef(null);
+  const chatContainerRef = useRef(null);
 
   const respostas = {
     '1': 'Podemos reciclar diversos materiais como papel (jornais, revistas, caixas), plástico (garrafas PET, embalagens), vidro (garrafas, potes), metal (latas de alumínio, tampas) e eletrônicos. É importante que os materiais estejam limpos e separados adequadamente.',
@@ -44,7 +45,9 @@ function FAQ() {
   }, []);
 
   useEffect(() => {
-    if (!isInitialLoad) messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (!isInitialLoad && chatContainerRef.current) {
+      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+    }
   }, [messages, isInitialLoad]);
 
   const handleSendMessage = (valor) => {
@@ -171,7 +174,7 @@ function FAQ() {
             </div>
 
             {/* Mensagens */}
-            <div style={{ height: '420px', overflowY: 'auto', padding: '1.5rem', background: 'linear-gradient(135deg, #f8fafc, #f1f5f9)', scrollbarWidth: 'none' }}>
+            <div ref={chatContainerRef} style={{ height: '420px', overflowY: 'auto', padding: '1.5rem', background: 'linear-gradient(135deg, #f8fafc, #f1f5f9)', scrollbarWidth: 'none' }}>
               {messages.map((msg, index) => (
                 <div key={index} className={`d-flex mb-4 ${msg.type === 'user' ? 'justify-content-end' : 'justify-content-start'}`}>
                   {msg.type === 'bot' && (

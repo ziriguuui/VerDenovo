@@ -79,6 +79,7 @@ class ApiService {
     });
     if (response.token) {
       _tokenMemoria = response.token;
+      localStorage.setItem('token', response.token);
       localStorage.setItem('usuario', JSON.stringify(response.usuario));
     }
     return response;

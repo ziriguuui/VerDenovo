@@ -22,6 +22,16 @@ export const AuthProvider = ({ children }) => {
   const [mostrarMensagemLogout, setMostrarMensagemLogout] = useState(false);
 
   useEffect(() => {
+    if (usuario && usuario.tipo === 'usuario' && !usuario.pontoVinculado) {
+      apiService.listarMeusPontos().catch(() => []).then(meusPontos => {
+        const pontoAtivo = meusPontos.find(p => p.statusPonto === 'ATIVO') || null;
+        if (pontoAtivo) setUsuario(prev => ({ ...prev, pontoVinculado: pontoAtivo }));
+      });
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
     if (usuario) {
       localStorage.setItem('usuario_logado', JSON.stringify(usuario));
     } else {
@@ -64,7 +74,7 @@ export const AuthProvider = ({ children }) => {
       pontoAtivo = meusPontos.find(p => p.statusPonto === 'ATIVO') || null;
       if (!pontoAtivo) {
         const todosPontos = await apiService.listarPontos().catch(() => []);
-        pontoAtivo = todosPontos.find(p => p.email === response.usuario.email) || null;
+        pontoAtivo = todosPontos.find(p => p.email === response.usuario.email && p.statusPonto === 'ATIVO') || null;
       }
     }
     setUsuario({ tipo: 'usuario', dados: response.usuario, pontoVinculado: pontoAtivo });
@@ -92,7 +102,7 @@ export const AuthProvider = ({ children }) => {
     ]);
     const pontoAtivo =
       meusPontos.find(p => p.statusPonto === 'ATIVO') ||
-      todosPontos.find(p => p.email === usuario.dados?.email) ||
+      todosPontos.find(p => p.email === usuario.dados?.email && p.statusPonto === 'ATIVO') ||
       null;
     setUsuario(prev => ({ ...prev, pontoVinculado: pontoAtivo }));
   };

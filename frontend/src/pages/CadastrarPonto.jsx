@@ -26,6 +26,7 @@ function CadastrarPonto() {
   const [erro, setErro] = useState('');
   const [sucesso, setSucesso] = useState(false);
   const [jaTemPonto, setJaTemPonto] = useState(false);
+  const [pontoPendente, setPontoPendente] = useState(false);
   const [verificando, setVerificando] = useState(true);
   const { usuario } = useAuth();
 
@@ -45,7 +46,9 @@ function CadastrarPonto() {
     apiService.listarMeusPontos()
       .then(pontos => {
         const temAtivo = pontos.some(p => p.statusPonto === 'ATIVO' || p.statusPonto === 'PENDENTE');
+        const isPendente = pontos.some(p => p.statusPonto === 'PENDENTE');
         setJaTemPonto(temAtivo);
+        setPontoPendente(isPendente);
       })
       .catch(() => setJaTemPonto(false))
       .finally(() => setVerificando(false));
@@ -119,13 +122,19 @@ function CadastrarPonto() {
           }}>
             <i className="bi bi-geo-alt-fill text-white" style={{fontSize: '2.5rem'}}></i>
           </div>
-          <h2 className="fw-bold text-success mb-3">Você já tem um ponto!</h2>
+          <h2 className="fw-bold text-success mb-3">
+            {pontoPendente ? 'Ponto em análise!' : 'Você já tem um ponto!'}
+          </h2>
           <p className="text-muted mb-4">
-            Cada usuário pode cadastrar apenas um ponto de coleta. Gerencie as informações do seu ponto existente.
+            {pontoPendente
+              ? 'Seu ponto está aguardando aprovação de um administrador. Após a aprovação, ele aparecerá na lista de pontos de coleta.'
+              : 'Cada usuário pode cadastrar apenas um ponto de coleta. Gerencie as informações do seu ponto existente.'}
           </p>
-          <Link to="/personalizar-ponto" className="btn btn-success px-5 py-3" style={{borderRadius: '12px', fontWeight: '600'}}>
-            <i className="bi bi-gear me-2"></i>Gerenciar Meu Ponto
-          </Link>
+          {!pontoPendente && (
+            <Link to="/personalizar-ponto" className="btn btn-success px-5 py-3" style={{borderRadius: '12px', fontWeight: '600'}}>
+              <i className="bi bi-gear me-2"></i>Gerenciar Meu Ponto
+            </Link>
+          )}
         </div>
       </div>
     );
@@ -157,9 +166,11 @@ function CadastrarPonto() {
             <Link to="/pontos" className="btn btn-outline-success px-4" style={{borderRadius: '12px'}}>
               <i className="bi bi-geo-alt me-2"></i>Ver pontos ativos
             </Link>
-            <Link to="/personalizar-ponto" className="btn btn-success px-4" style={{borderRadius: '12px'}}>
-              <i className="bi bi-gear me-2"></i>Gerenciar Meu Ponto
-            </Link>
+            {usuario?.dados?.nivelAcesso === 'ADMIN' && (
+              <Link to="/personalizar-ponto" className="btn btn-success px-4" style={{borderRadius: '12px'}}>
+                <i className="bi bi-gear me-2"></i>Gerenciar Meu Ponto
+              </Link>
+            )}
           </div>
         </div>
       </div>
