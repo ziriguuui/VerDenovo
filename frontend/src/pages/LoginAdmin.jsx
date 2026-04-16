@@ -9,6 +9,8 @@ function LoginAdmin() {
   const [erro, setErro] = useState('');
   const [carregando, setCarregando] = useState(false);
   const [mostrarSenha, setMostrarSenha] = useState(false);
+  const [tentativas, setTentativas] = useState(0);
+  const [bloqueadoAte, setBloqueadoAte] = useState(null);
 
   const styles = `
     .login-admin-container {
@@ -93,13 +95,25 @@ function LoginAdmin() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (bloqueadoAte && Date.now() < bloqueadoAte) {
+      const seg = Math.ceil((bloqueadoAte - Date.now()) / 1000);
+      setErro(`Muitas tentativas. Aguarde ${seg}s antes de tentar novamente.`);
+      return;
+    }
     setCarregando(true);
     setErro('');
     try {
       await loginAdmin(formData.email, formData.senha);
       navigate('/gerenciar-contas');
     } catch (error) {
-      setErro(error.message || 'Credenciais de administrador incorretas.');
+      const novasTentativas = tentativas + 1;
+      setTentativas(novasTentativas);
+      if (novasTentativas >= 5) {
+        setBloqueadoAte(Date.now() + 30000);
+        setErro('Muitas tentativas. Aguarde 30 segundos.');
+      } else {
+        setErro(error.message || 'Credenciais de administrador incorretas.');
+      }
     } finally {
       setCarregando(false);
     }

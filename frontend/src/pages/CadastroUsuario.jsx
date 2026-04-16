@@ -125,6 +125,12 @@ function CadastroUsuario() {
       return;
     }
 
+    if (passwordStrength < 50) {
+      setErro('Use uma senha mais forte. Inclua letras maiúsculas, números ou símbolos.');
+      setCarregando(false);
+      return;
+    }
+
     try {
       await cadastrarUsuario({
         nome: formData.nome,

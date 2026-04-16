@@ -104,7 +104,8 @@ function RecuperarSenha() {
   };
 
   const titulos = ['', 'Recuperar Senha', 'Verificar Código', 'Nova Senha', 'Concluído'];
-  const subtitulos = ['', 'Usuário', `Código enviado para ${email}`, 'Defina sua nova senha', ''];
+  const emailMascarado = email.replace(/(.{2}).+(@.+)/, '$1***$2');
+  const subtitulos = ['', 'Usuário', `Código enviado para ${emailMascarado}`, 'Defina sua nova senha', ''];
   const icones = ['', 'bi-key', 'bi-shield-check', 'bi-lock', 'bi-check-circle'];
 
   return (

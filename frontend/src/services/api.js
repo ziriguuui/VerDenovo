@@ -1,8 +1,36 @@
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
 
+const ALLOWED_ORIGIN = new URL(API_BASE_URL).origin;
+
+function buildSafeUrl(endpoint) {
+  if (!/^\/[a-zA-Z0-9\-_/]+$/.test(endpoint)) {
+    throw new Error('Endpoint inválido.');
+  }
+  const url = new URL(`${API_BASE_URL}${endpoint}`);
+  if (url.origin !== ALLOWED_ORIGIN) {
+    throw new Error('URL fora do domínio permitido.');
+  }
+  return url.toString();
+}
+
+// Token mantido em memória — não acessível por scripts XSS via localStorage
+let _tokenMemoria = null;
+
 class ApiService {
   getToken() {
-    return localStorage.getItem('token');
+    const token = _tokenMemoria;
+    if (!token) return null;
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      if (payload.exp && payload.exp * 1000 < Date.now()) {
+        this.logout();
+        return null;
+      }
+    } catch {
+      this.logout();
+      return null;
+    }
+    return token;
   }
 
   getHeaders() {
@@ -13,15 +41,16 @@ class ApiService {
   }
 
   async request(endpoint, options = {}) {
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+    const url = buildSafeUrl(endpoint);
+    const response = await fetch(url, {
       headers: this.getHeaders(),
       ...options,
     });
 
     if (response.status === 401) {
       this.logout();
-      window.location.href = '/login-usuario';
-      return; // para execução antes de tentar ler o body
+      window.location.href = '/';
+      return;
     }
 
     if (!response.ok) {
@@ -49,7 +78,7 @@ class ApiService {
       body: JSON.stringify({ email, senha }),
     });
     if (response.token) {
-      localStorage.setItem('token', response.token);
+      _tokenMemoria = response.token;
       localStorage.setItem('usuario', JSON.stringify(response.usuario));
     }
     return response;
@@ -68,6 +97,7 @@ class ApiService {
   }
 
   logout() {
+    _tokenMemoria = null;
     localStorage.removeItem('token');
     localStorage.removeItem('usuario');
     localStorage.removeItem('usuario_logado');
@@ -113,6 +143,23 @@ class ApiService {
   }
 
   isAuthenticated() { return !!this.getToken(); }
+
+  // Restaura token da sessão anterior se ainda válido (chamado no bootstrap da app)
+  restoreSession() {
+    const token = localStorage.getItem('token');
+    if (token) {
+      try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        if (payload.exp && payload.exp * 1000 > Date.now()) {
+          _tokenMemoria = token;
+        } else {
+          localStorage.removeItem('token');
+        }
+      } catch {
+        localStorage.removeItem('token');
+      }
+    }
+  }
 
   getUsuarioLogado() {
     const usuario = localStorage.getItem('usuario');

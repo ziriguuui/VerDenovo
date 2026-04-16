@@ -1,18 +1,14 @@
 package com.verdenovo.api.controller;
 
 import com.verdenovo.api.entity.Ponto;
-import com.verdenovo.api.entity.Categoria;
-import com.verdenovo.api.entity.Usuario;
 import com.verdenovo.api.repository.PontoRepository;
-import com.verdenovo.api.repository.CategoriaRepository;
 import com.verdenovo.api.repository.UsuarioRepository;
 import com.verdenovo.api.dto.*;
+import com.verdenovo.api.service.PontoService;
 import com.verdenovo.api.util.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
-import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -21,16 +17,13 @@ public class PontoController {
     
     @Autowired
     private PontoRepository pontoRepository;
-    
-    @Autowired
-    private CategoriaRepository categoriaRepository;
-    
+
     @Autowired
     private UsuarioRepository usuarioRepository;
-    
+
     @Autowired
-    private PasswordEncoder passwordEncoder;
-    
+    private PontoService pontoService;
+
     @Autowired
     private JwtUtil jwtUtil;
 
@@ -47,44 +40,19 @@ public class PontoController {
     @PostMapping
     public ResponseEntity<MessageResponse> criarPonto(@RequestBody Ponto ponto,
             org.springframework.security.core.Authentication authentication) {
-        if (authentication != null) {
-            String email = authentication.getName();
-            usuarioRepository.findByEmail(email).ifPresent(u -> {
-                // Verificar se já tem ponto ativo ou pendente
-                boolean jaTemPonto = pontoRepository.findByUsuarioId(u.getId()).stream()
-                    .anyMatch(p -> "ATIVO".equals(p.getStatusPonto()) || "PENDENTE".equals(p.getStatusPonto()));
-                if (jaTemPonto) {
-                    throw new RuntimeException("Você já possui um ponto de coleta cadastrado.");
-                }
-                ponto.setUsuarioId(u.getId());
-            });
-        }
-        if (ponto.getSenha() != null && !ponto.getSenha().isEmpty()) {
-            ponto.setSenha(passwordEncoder.encode(ponto.getSenha()));
-        } else {
-            String senhaTemp = java.util.UUID.randomUUID().toString().substring(0, 12);
-            ponto.setSenha(passwordEncoder.encode(senhaTemp));
-        }
-        ponto.setDataCadastro(LocalDateTime.now());
-        ponto.setStatusPonto("PENDENTE");
-        pontoRepository.save(ponto);
-        return ResponseEntity.ok(new MessageResponse("Ponto cadastrado com sucesso! Aguardando aprovação do administrador."));
+        String emailLogado = authentication != null ? authentication.getName() : null;
+        Ponto salvo = pontoService.criarPonto(ponto, emailLogado);
+        boolean isAtivo = "ATIVO".equals(salvo.getStatusPonto());
+        return ResponseEntity.ok(new MessageResponse(
+            isAtivo ? "Ponto cadastrado e ativado com sucesso!" : "Ponto cadastrado com sucesso! Aguardando aprovação do administrador."
+        ));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<MessageResponse> atualizarPonto(@PathVariable Long id, @RequestBody Ponto pontoAtualizado) {
-        Ponto ponto = pontoRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Ponto não encontrado"));
-        ponto.setNome(pontoAtualizado.getNome());
-        ponto.setCep(pontoAtualizado.getCep());
-        ponto.setNumero(pontoAtualizado.getNumero());
-        ponto.setComplemento(pontoAtualizado.getComplemento());
-        ponto.setLogradouro(pontoAtualizado.getLogradouro());
-        ponto.setTelefone(pontoAtualizado.getTelefone());
-        ponto.setHoraFuncionamento(pontoAtualizado.getHoraFuncionamento());
-        ponto.setMaterial(pontoAtualizado.getMaterial());
-        ponto.setDescricao(pontoAtualizado.getDescricao());
-        pontoRepository.save(ponto);
+    public ResponseEntity<MessageResponse> atualizarPonto(@PathVariable Long id, @RequestBody Ponto pontoAtualizado,
+            org.springframework.security.core.Authentication authentication) {
+        String emailLogado = authentication != null ? authentication.getName() : null;
+        pontoService.atualizarPonto(id, pontoAtualizado, emailLogado);
         return ResponseEntity.ok(new MessageResponse("Ponto atualizado com sucesso"));
     }
 
@@ -137,13 +105,7 @@ public class PontoController {
     
     @PostMapping("/login")
     public ResponseEntity<PontoLoginResponse> loginPonto(@RequestBody PontoLoginRequest request) {
-        Ponto ponto = pontoRepository.findByEmailAndStatusPonto(request.getEmail(), "ATIVO")
-                .orElseThrow(() -> new RuntimeException("Credenciais inválidas"));
-
-        if (ponto.getSenha() == null || !passwordEncoder.matches(request.getSenha(), ponto.getSenha())) {
-            throw new RuntimeException("Credenciais inválidas");
-        }
-
+        Ponto ponto = pontoService.loginPonto(request.getEmail(), request.getSenha());
         String token = jwtUtil.generateToken(ponto.getEmail());
         PontoResponse pontoResponse = new PontoResponse(
                 ponto.getId(), ponto.getNome(), ponto.getEmail(),

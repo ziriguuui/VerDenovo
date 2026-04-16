@@ -36,8 +36,8 @@ function Layout() {
     '/login-admin',
     '/cadastro-usuario',
     '/recuperar-senha',
-    '/redefinir-senha'
-  ].includes(location.pathname);
+    '/redefinir-senha',
+  ].some(path => location.pathname.startsWith(path));
 
   return (
     <div className="App">

@@ -7,6 +7,7 @@ import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import java.nio.charset.StandardCharsets;
 import javax.crypto.SecretKey;
 import java.util.Base64;
 import java.util.Date;
@@ -24,7 +25,7 @@ public class JwtUtil {
     private long JWT_TOKEN_VALIDITY;
 
     private SecretKey getSigningKey() {
-        byte[] keyBytes = Base64.getEncoder().encode(SECRET.getBytes());
+        byte[] keyBytes = Base64.getEncoder().encode(SECRET.getBytes(StandardCharsets.UTF_8));
         return Keys.hmacShaKeyFor(keyBytes);
     }
     

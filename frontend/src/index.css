@@ -39,7 +39,6 @@ h1, h2, h3, h4, h5, h6 {
 /* Fix scroll issues */
 html, body {
   overflow-x: hidden;
-  overflow-y: auto;
   height: auto;
 }
 
@@ -87,21 +86,6 @@ html, body {
 .btn-outline-success:hover {
   background: #10b981;
   transform: translateY(-1px);
-}
-
-/* Ensure scroll works when offcanvas is open */
-body:not(.modal-open) {
-  overflow-y: auto !important;
-}
-
-/* Fix for Bootstrap offcanvas scroll lock */
-.offcanvas-backdrop {
-  position: fixed;
-}
-
-body.offcanvas-open {
-  overflow: auto !important;
-  padding-right: 0 !important;
 }
 
 /* ========== ANIMAÇÕES GLOBAIS ========== */
@@ -292,13 +276,12 @@ footer {
 }
 
 /* Smooth transitions for all interactive elements */
-* {
+a, button, .btn, .card, .badge, .nav-link, .form-control, .bi {
   transition: color 0.3s ease, background-color 0.3s ease, border-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 /* Animações específicas para elementos */
 .form-control:focus {
-  transform: scale(1.02);
   box-shadow: 0 0 0 0.2rem rgba(16, 185, 129, 0.25);
 }
 

@@ -6,14 +6,16 @@ import ConfirmModal from '../components/ConfirmModal';
 
 async function buscarCep(cep, setFormData) {
   const cepLimpo = cep.replace(/\D/g, '');
-  if (cepLimpo.length !== 8) return;
+  if (cepLimpo.length !== 8 || !/^\d{8}$/.test(cepLimpo)) return;
   try {
-    const res = await fetch(`https://viacep.com.br/ws/${cepLimpo}/json/`);
+    const url = `https://viacep.com.br/ws/${cepLimpo}/json/`;
+    const res = await fetch(url, { method: 'GET' });
+    if (!res.ok) return;
     const data = await res.json();
-    if (!data.erro) {
+    if (data && !data.erro && typeof data.logradouro === 'string') {
       setFormData(prev => ({
         ...prev,
-        endereco: `${data.logradouro || ''}, ${data.bairro || ''}`.trim().replace(/,$/, ''),
+        endereco: `${data.logradouro}, ${data.bairro || ''}`.trim().replace(/,$/, ''),
       }));
     }
   } catch { }
@@ -48,7 +50,7 @@ const mapear = (d) => ({
 });
 
 function PersonalizarPonto() {
-  const { usuario, logout } = useAuth();
+  const { usuario, atualizarPontoVinculado } = useAuth();
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
@@ -178,7 +180,7 @@ function PersonalizarPonto() {
         try {
           const dadosAtual = usuario?.tipo === 'ponto' ? usuario.dados : usuario?.pontoVinculado;
           await apiService.deletarPonto(dadosAtual?.id || pontoIdFallback);
-          logout();
+          await atualizarPontoVinculado();
           navigate('/');
         } catch (err) {
           setConfirm(null);

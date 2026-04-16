@@ -6,12 +6,14 @@ import { useAuth } from '../contexts/AuthContext';
 
 async function buscarCep(cep, setValue) {
   const cepLimpo = cep.replace(/\D/g, '');
-  if (cepLimpo.length !== 8) return;
+  if (cepLimpo.length !== 8 || !/^\d{8}$/.test(cepLimpo)) return;
   try {
-    const res = await fetch(`https://viacep.com.br/ws/${cepLimpo}/json/`);
+    const url = `https://viacep.com.br/ws/${cepLimpo}/json/`;
+    const res = await fetch(url, { method: 'GET' });
+    if (!res.ok) return;
     const data = await res.json();
-    if (!data.erro) {
-      setValue('logradouro', `${data.logradouro || ''}, ${data.bairro || ''} - ${data.localidade || ''}/${data.uf || ''}`.trim());
+    if (data && !data.erro && typeof data.logradouro === 'string') {
+      setValue('logradouro', `${data.logradouro}, ${data.bairro || ''} - ${data.localidade || ''}/${data.uf || ''}`.trim());
     }
   } catch { }
 }
@@ -28,14 +30,26 @@ function CadastrarPonto() {
   const { usuario } = useAuth();
 
   useEffect(() => {
+    // Admin nunca precisa verificar limite de pontos
+    if (usuario?.dados?.nivelAcesso === 'ADMIN') {
+      setJaTemPonto(false);
+      setVerificando(false);
+      return;
+    }
+    // Sem usuario ainda carregado, aguarda
+    if (!usuario) {
+      setVerificando(false);
+      return;
+    }
+    // Sempre busca do banco para garantir estado atualizado
     apiService.listarMeusPontos()
       .then(pontos => {
-        const ativo = pontos.some(p => p.statusPonto === 'ATIVO' || p.statusPonto === 'PENDENTE');
-        setJaTemPonto(ativo);
+        const temAtivo = pontos.some(p => p.statusPonto === 'ATIVO' || p.statusPonto === 'PENDENTE');
+        setJaTemPonto(temAtivo);
       })
-      .catch(() => {})
+      .catch(() => setJaTemPonto(false))
       .finally(() => setVerificando(false));
-  }, []);
+  }, [usuario]);
 
   const onSubmit = async (dados) => {
     setLoading(true);
@@ -51,6 +65,7 @@ function CadastrarPonto() {
 
     if (materiais.length === 0) {
       setErro('Selecione pelo menos um tipo de material.');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
       setLoading(false);
       return;
     }
@@ -63,16 +78,20 @@ function CadastrarPonto() {
         complemento: dados.complemento || '',
         logradouro: dados.logradouro || '',
         telefone: dados.telefone || '',
-        email: usuario?.dados?.email || '',
+        email: usuario?.dados?.nivelAcesso === 'ADMIN'
+          ? (dados.emailPonto || '')
+          : (usuario?.dados?.email || ''),
         horaFuncionamento: dados.horaFuncionamento,
         material: materiais.join(', '),
         descricao: dados.descricao || '',
         senha: dados.senha || null,
       });
       setSucesso(true);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
       reset();
     } catch (error) {
       setErro(error.message);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     } finally {
       setLoading(false);
     }
@@ -123,9 +142,13 @@ function CadastrarPonto() {
           }}>
             <i className="bi bi-hourglass-split text-white" style={{fontSize: '2.5rem'}}></i>
           </div>
-          <h2 className="fw-bold text-success mb-3">Ponto enviado para análise!</h2>
+          <h2 className="fw-bold text-success mb-3">
+            {usuario?.dados?.nivelAcesso === 'ADMIN' ? 'Ponto cadastrado!' : 'Ponto enviado para análise!'}
+          </h2>
           <p className="text-muted mb-2">
-            Seu ponto de coleta foi cadastrado com sucesso e está <strong>aguardando aprovação</strong> de um administrador.
+            {usuario?.dados?.nivelAcesso === 'ADMIN'
+              ? 'O ponto foi cadastrado e já está ativo no site.'
+              : <>Seu ponto de coleta foi cadastrado com sucesso e está <strong>aguardando aprovação</strong> de um administrador.</>}
           </p>
           <p className="text-muted mb-4" style={{fontSize: '0.9rem'}}>
             Após a aprovação, ele aparecerá na lista de pontos de coleta do site.
@@ -156,10 +179,17 @@ function CadastrarPonto() {
         </div>
 
         <div className="p-4">
-          <div className="alert alert-info border-0 rounded-3 mb-4">
-            <i className="bi bi-info-circle me-2"></i>
-            Após o cadastro, um administrador irá revisar e aprovar o ponto antes de ele aparecer publicamente.
-          </div>
+          {usuario?.dados?.nivelAcesso === 'ADMIN' ? (
+            <div className="alert alert-success border-0 rounded-3 mb-4">
+              <i className="bi bi-shield-check me-2"></i>
+              Ponto criado pelo administrador será ativado imediatamente.
+            </div>
+          ) : (
+            <div className="alert alert-info border-0 rounded-3 mb-4">
+              <i className="bi bi-info-circle me-2"></i>
+              Após o cadastro, um administrador irá revisar e aprovar o ponto antes de ele aparecer publicamente.
+            </div>
+          )}
 
           {erro && (
             <div className="alert alert-danger border-0 rounded-3 mb-4">
@@ -167,7 +197,7 @@ function CadastrarPonto() {
             </div>
           )}
 
-          <form onSubmit={handleSubmit(onSubmit)}>
+          <form onSubmit={handleSubmit(onSubmit, () => window.scrollTo({ top: 0, behavior: 'smooth' }))}>
 
             {/* Nome */}
             <div className="form-floating mb-3">
@@ -263,6 +293,17 @@ function CadastrarPonto() {
                 </div>
               </div>
             </div>
+
+            {/* Email — visível apenas para admin */}
+            {usuario?.dados?.nivelAcesso === 'ADMIN' && (
+              <div className="form-floating mb-3">
+                <input type="email" className="form-control" id="emailPonto"
+                  placeholder="email@usuario.com" maxLength="100" style={inputStyle}
+                  {...register('emailPonto')} />
+                <label htmlFor="emailPonto"><i className="bi bi-envelope me-2"></i>Email do dono do ponto (opcional)</label>
+                <small className="text-muted">Se informado, o ponto será vinculado a esse usuário</small>
+              </div>
+            )}
 
             {/* Descrição */}
             <div className="mb-3">

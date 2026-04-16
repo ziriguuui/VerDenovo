@@ -45,9 +45,7 @@ public class AuthService {
         usuario.setSenha(passwordEncoder.encode(usuario.getSenha()));
         usuario.setDataCadastro(LocalDateTime.now());
         usuario.setStatusUsuario("ATIVO");
-        if (usuario.getNivelAcesso() == null) {
-            usuario.setNivelAcesso("USER");
-        }
+        usuario.setNivelAcesso("USER");
         
         usuarioRepository.save(usuario);
     }

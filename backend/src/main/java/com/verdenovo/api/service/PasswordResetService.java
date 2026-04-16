@@ -9,9 +9,10 @@ import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import java.time.LocalDateTime;
-import java.util.Random;
+
 
 @Service
 public class PasswordResetService {
@@ -28,8 +29,10 @@ public class PasswordResetService {
     @Value("${spring.mail.username}")
     private String emailRemetente;
 
+    private final java.security.SecureRandom secureRandom = new java.security.SecureRandom();
+
     private String gerarCodigo() {
-        return String.format("%06d", new Random().nextInt(999999));
+        return String.format("%06d", secureRandom.nextInt(999999));
     }
 
     public void solicitarRecuperacao(String email) {
@@ -125,8 +128,8 @@ public class PasswordResetService {
 
             helper.setText(html, true);
             mailSender.send(message);
-        } catch (Exception e) {
-            throw new RuntimeException("Erro ao enviar email. Tente novamente.");
+        } catch (MessagingException e) {
+            throw new RuntimeException("Erro ao montar o email. Tente novamente.", e);
         }
     }
 }

@@ -22,7 +22,7 @@ function ProtectedRoute({ children, tipoRequerido }) {
 
   if (tipoRequerido === 'ponto') {
     const temAcesso = usuario?.tipo === 'ponto' || usuario?.pontoVinculado;
-    if (!temAcesso) return <Navigate to="/login-usuario" replace />;
+    if (!temAcesso) return <Navigate to="/" replace />;
   }
 
   return children;

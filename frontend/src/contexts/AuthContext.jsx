@@ -11,8 +11,13 @@ export const useAuth = () => {
 
 export const AuthProvider = ({ children }) => {
   const [usuario, setUsuario] = useState(() => {
-    const saved = localStorage.getItem('usuario_logado');
-    return saved ? JSON.parse(saved) : null;
+    try {
+      const saved = localStorage.getItem('usuario_logado');
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      localStorage.removeItem('usuario_logado');
+      return null;
+    }
   });
   const [mostrarMensagemLogout, setMostrarMensagemLogout] = useState(false);
 
@@ -26,10 +31,15 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     const handleStorageChange = () => {
-      const saved = localStorage.getItem('usuario_logado');
-      const savedUser = saved ? JSON.parse(saved) : null;
-      if (JSON.stringify(savedUser) !== JSON.stringify(usuario)) {
-        setUsuario(savedUser);
+      try {
+        const saved = localStorage.getItem('usuario_logado');
+        const savedUser = saved ? JSON.parse(saved) : null;
+        if (JSON.stringify(savedUser) !== JSON.stringify(usuario)) {
+          setUsuario(savedUser);
+        }
+      } catch {
+        localStorage.removeItem('usuario_logado');
+        setUsuario(null);
       }
     };
     window.addEventListener('storage', handleStorageChange);
@@ -48,17 +58,14 @@ export const AuthProvider = ({ children }) => {
 
   const loginUsuario = async (email, senha) => {
     const response = await apiService.login(email, senha);
-    // Buscar ponto vinculado apenas para usuários comuns
     let pontoAtivo = null;
     if (response.usuario?.nivelAcesso !== 'ADMIN') {
-      const [meusPontos, todosPontos] = await Promise.all([
-        apiService.listarMeusPontos().catch(() => []),
-        apiService.listarPontos().catch(() => [])
-      ]);
-      pontoAtivo =
-        meusPontos.find(p => p.statusPonto === 'ATIVO') ||
-        todosPontos.find(p => p.email === response.usuario.email) ||
-        null;
+      const meusPontos = await apiService.listarMeusPontos().catch(() => []);
+      pontoAtivo = meusPontos.find(p => p.statusPonto === 'ATIVO') || null;
+      if (!pontoAtivo) {
+        const todosPontos = await apiService.listarPontos().catch(() => []);
+        pontoAtivo = todosPontos.find(p => p.email === response.usuario.email) || null;
+      }
     }
     setUsuario({ tipo: 'usuario', dados: response.usuario, pontoVinculado: pontoAtivo });
     return response;
@@ -77,6 +84,19 @@ export const AuthProvider = ({ children }) => {
     window.location.href = '/';
   };
 
+  const atualizarPontoVinculado = async () => {
+    if (!usuario || usuario.tipo !== 'usuario') return;
+    const [meusPontos, todosPontos] = await Promise.all([
+      apiService.listarMeusPontos().catch(() => []),
+      apiService.listarPontos().catch(() => [])
+    ]);
+    const pontoAtivo =
+      meusPontos.find(p => p.statusPonto === 'ATIVO') ||
+      todosPontos.find(p => p.email === usuario.dados?.email) ||
+      null;
+    setUsuario(prev => ({ ...prev, pontoVinculado: pontoAtivo }));
+  };
+
   const isLogado = () => usuario !== null;
 
   return (
@@ -88,6 +108,7 @@ export const AuthProvider = ({ children }) => {
       logout,
       isLogado,
       mostrarMensagemLogout,
+      atualizarPontoVinculado,
     }}>
       {children}
     </AuthContext.Provider>

@@ -10,6 +10,17 @@ if %errorlevel% neq 0 (
     exit /b 1
 )
 
+if exist .env (
+    echo Carregando variaveis de ambiente do .env...
+    for /f "usebackq tokens=1,* delims==" %%A in (".env") do (
+        if not "%%A"=="" if not "%%A:~0,1%%"=="#" set "%%A=%%B"
+    )
+) else (
+    echo AVISO: Arquivo .env nao encontrado! Copie .env.example para .env e preencha os valores.
+    pause
+    exit /b 1
+)
+
 if exist mvnw.cmd (
     echo Usando Maven Wrapper...
     mvnw.cmd spring-boot:run
