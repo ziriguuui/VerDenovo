@@ -16,148 +16,243 @@ function Navbar() {
 
   const handleLogout = () => { logout(); setMenuAberto(false); };
   const fechar = () => setMenuAberto(false);
+
+  const isActive = (path) => location.pathname === path;
+
   return (
     <>
       <style>{`
-        .nav-section { background: rgba(255,255,255,0.7); backdrop-filter: blur(10px); border-radius: 20px; margin-bottom: 1.5rem; padding: 1.5rem; box-shadow: 0 8px 25px rgba(0,0,0,0.08); }
-        .nav-section h6 { color: #1f2937; font-weight: 700; margin-bottom: 1rem; }
-        .nav-link-custom { display: block; color: #4b5563; padding: 0.75rem 1rem; border-radius: 12px; margin-bottom: 0.5rem; transition: all 0.3s ease; background: rgba(255,255,255,0.5); border: 1px solid rgba(5,150,105,0.1); text-decoration: none; }
-        .nav-link-custom:hover { background: linear-gradient(135deg, #dcfce7, #bbf7d0); color: #059669; transform: translateX(8px); box-shadow: 0 4px 15px rgba(5,150,105,0.2); }
-        .nav-link-active { background: linear-gradient(135deg, #10b981, #059669) !important; color: white !important; box-shadow: 0 4px 15px rgba(16,185,129,0.4); }
-        .nav-link-login-active { background: linear-gradient(135deg, #3b82f6, #2563eb) !important; color: white !important; }
-        .nav-link-login:hover { background: linear-gradient(135deg, #dbeafe, #bfdbfe); color: #3b82f6; transform: translateX(8px); }
-        .nav-link-admin-active { background: linear-gradient(135deg, #064e3b, #065f46) !important; color: white !important; }
-        .nav-link-admin:hover { background: linear-gradient(135deg, #dcfce7, #bbf7d0) !important; color: #064e3b !important; transform: translateX(8px) !important; }
-        .menu-lateral::-webkit-scrollbar { display: none; }
+        .clay-navbar {
+          position: fixed; top: 0; left: 0; right: 0; z-index: 1030;
+          background: rgba(255,255,255,0.72);
+          backdrop-filter: blur(18px);
+          border-bottom: 2px solid rgba(255,255,255,0.6);
+          box-shadow: 0 4px 0px rgba(0,0,0,0.08), 0 8px 24px rgba(0,0,0,0.06);
+          height: 72px;
+          display: flex; align-items: center;
+        }
+        .clay-menu-btn {
+          background: rgba(255,255,255,0.7);
+          border: 2px solid rgba(255,255,255,0.6);
+          border-radius: 14px;
+          box-shadow: 3px 3px 0px rgba(0,0,0,0.10);
+          color: #16a34a;
+          width: 44px; height: 44px;
+          display: flex; align-items: center; justify-content: center;
+          cursor: pointer;
+          transition: all 0.2s cubic-bezier(0.34,1.2,0.64,1);
+        }
+        .clay-menu-btn:hover {
+          transform: translateY(-2px) scale(1.05);
+          box-shadow: 4px 4px 0px rgba(0,0,0,0.14);
+          background: rgba(255,255,255,0.9);
+        }
+        .clay-brand { text-decoration: none; display: flex; align-items: center; gap: 10px; }
+        .clay-brand span { font-size: 1.3rem; font-weight: 800; color: #16a34a; letter-spacing: -0.03em; }
+
+        .clay-drawer {
+          position: fixed; top: 0; left: 0; bottom: 0; width: 310px;
+          background: linear-gradient(160deg, #f0fdf4 0%, #dcfce7 50%, #d1fae5 100%);
+          z-index: 1050; overflow-y: auto; display: flex; flex-direction: column;
+          scrollbar-width: none;
+          border-right: 2px solid rgba(255,255,255,0.7);
+          box-shadow: 8px 0 32px rgba(0,0,0,0.12);
+        }
+        .clay-drawer::-webkit-scrollbar { display: none; }
+
+        .drawer-header {
+          background: linear-gradient(135deg, #16a34a 0%, #22c55e 100%);
+          padding: 1.5rem;
+          display: flex; align-items: center; justify-content: space-between;
+          border-bottom: 2px solid rgba(255,255,255,0.3);
+          box-shadow: 0 4px 0px rgba(0,0,0,0.10);
+          flex-shrink: 0;
+        }
+        .drawer-close {
+          background: rgba(255,255,255,0.25);
+          border: 2px solid rgba(255,255,255,0.4);
+          border-radius: 12px;
+          color: white; width: 36px; height: 36px;
+          display: flex; align-items: center; justify-content: center;
+          cursor: pointer; font-size: 1rem;
+          transition: all 0.2s ease;
+          box-shadow: 2px 2px 0px rgba(0,0,0,0.12);
+        }
+        .drawer-close:hover { background: rgba(255,255,255,0.4); transform: scale(1.08); }
+
+        .drawer-section {
+          background: rgba(255,255,255,0.65);
+          backdrop-filter: blur(10px);
+          border-radius: 20px;
+          border: 2px solid rgba(255,255,255,0.7);
+          box-shadow: 4px 4px 0px rgba(0,0,0,0.08);
+          margin-bottom: 1rem;
+          padding: 1.25rem;
+        }
+        .drawer-section h6 {
+          color: #166534; font-weight: 700; margin-bottom: 0.75rem; font-size: 0.8rem;
+          text-transform: uppercase; letter-spacing: 0.06em;
+        }
+        .nav-item-clay {
+          display: flex; align-items: center; gap: 10px;
+          color: #166534; padding: 0.65rem 1rem;
+          border-radius: 14px; margin-bottom: 0.35rem;
+          transition: all 0.2s cubic-bezier(0.34,1.2,0.64,1);
+          background: rgba(255,255,255,0.5);
+          border: 1.5px solid rgba(255,255,255,0.6);
+          text-decoration: none; font-weight: 500; font-size: 0.9rem;
+          box-shadow: 2px 2px 0px rgba(0,0,0,0.07);
+        }
+        .nav-item-clay:hover {
+          background: rgba(255,255,255,0.85);
+          transform: translateX(6px) translateY(-1px);
+          box-shadow: 4px 4px 0px rgba(0,0,0,0.10);
+          color: #15803d;
+        }
+        .nav-item-clay.active {
+          background: linear-gradient(135deg, #22c55e, #16a34a);
+          color: white; border-color: rgba(255,255,255,0.4);
+          box-shadow: 4px 4px 0px rgba(0,0,0,0.14);
+        }
+        .nav-item-clay.active-blue {
+          background: linear-gradient(135deg, #3b82f6, #2563eb);
+          color: white; border-color: rgba(255,255,255,0.4);
+          box-shadow: 4px 4px 0px rgba(0,0,0,0.14);
+        }
+        .nav-item-clay.active-dark {
+          background: linear-gradient(135deg, #14532d, #166534);
+          color: white; border-color: rgba(255,255,255,0.3);
+          box-shadow: 4px 4px 0px rgba(0,0,0,0.14);
+        }
+        .nav-item-logout {
+          color: #dc2626 !important;
+          background: rgba(254,226,226,0.7) !important;
+          border-color: rgba(252,165,165,0.6) !important;
+        }
+        .nav-item-logout:hover {
+          background: rgba(254,202,202,0.9) !important;
+          color: #b91c1c !important;
+        }
       `}</style>
 
-      <nav className="navbar navbar-dark bg-success fixed-top" style={{height: '72px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)', zIndex: 1030}}>
-        <div className="container-fluid px-3">
-          <div className="d-flex align-items-center">
-            <button className="btn btn-link p-2 me-3 text-white" onClick={() => setMenuAberto(true)} style={{border: 'none'}}>
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/>
-              </svg>
-            </button>
-            <Link className="navbar-brand d-flex align-items-center text-white text-decoration-none" to="/" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
-              <img src="/Verdenovologo.png" alt="VerDenovo" height="40" className="me-2" />
-              <span style={{fontSize: '22px', fontWeight: '500'}}>VerDenovo</span>
-            </Link>
-          </div>
+      {/* Navbar */}
+      <nav className="clay-navbar">
+        <div className="container-fluid px-3 d-flex align-items-center gap-3">
+          <button className="clay-menu-btn" onClick={() => setMenuAberto(true)}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/>
+            </svg>
+          </button>
+          <Link className="clay-brand" to="/" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
+            <img src="/Verdenovologo.png" alt="VerDenovo" height="36" />
+            <span>VerDenovo</span>
+          </Link>
         </div>
       </nav>
 
+      {/* Drawer */}
       {menuAberto && (
         <>
-          {/* Backdrop */}
-          <div onClick={fechar} style={{position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1040}} />
-
-          {/* Menu */}
-          <div className="menu-lateral" style={{
-            position: 'fixed', top: 0, left: 0, bottom: 0, width: '320px',
-            background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 50%, #cbd5e1 100%)',
-            zIndex: 1050, overflowY: 'auto', display: 'flex', flexDirection: 'column',
-            scrollbarWidth: 'none'
-          }}>
-            {/* Header */}
-            <div style={{background: 'linear-gradient(135deg, #059669, #10b981)', padding: '2rem 1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0}}>
-              <h5 style={{color: 'white', margin: 0, fontSize: '1.5rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '12px'}}>
-                <img src="/Verdenovologo.png" alt="VerDenovo" height="32" />
-                VerDenovo
-              </h5>
-              <button onClick={fechar} style={{background: 'rgba(255,255,255,0.2)', border: 'none', borderRadius: '8px', color: 'white', padding: '4px 10px', cursor: 'pointer', fontSize: '1rem'}}>
-                ✕
-              </button>
+          <div onClick={fechar} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 1040, backdropFilter: 'blur(4px)' }} />
+          <div className="clay-drawer">
+            <div className="drawer-header">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <img src="/Verdenovologo.png" alt="VerDenovo" height="30" />
+                <span style={{ color: 'white', fontWeight: 800, fontSize: '1.2rem', letterSpacing: '-0.02em' }}>VerDenovo</span>
+              </div>
+              <button className="drawer-close" onClick={fechar}>✕</button>
             </div>
 
-            {/* Body */}
-            <div style={{padding: '1.5rem', flex: 1}}>
-              <div className="nav-section">
-                <h6><i className="bi bi-compass me-2" style={{color: '#059669'}}></i>Navegação</h6>
-                <Link className={`nav-link-custom ${location.pathname === '/' ? 'nav-link-active' : ''}`} to="/" onClick={fechar}>
-                  <i className="bi bi-house me-3"></i>Início
+            <div style={{ padding: '1.25rem', flex: 1 }}>
+              <div className="drawer-section">
+                <h6><i className="bi bi-compass me-2"></i>Navegação</h6>
+                <Link className={`nav-item-clay ${isActive('/') ? 'active' : ''}`} to="/" onClick={fechar}>
+                  <i className="bi bi-house-fill"></i>Início
                 </Link>
-                <Link className={`nav-link-custom ${location.pathname === '/pontos' ? 'nav-link-active' : ''}`} to="/pontos" onClick={fechar}>
-                  <i className="bi bi-geo-alt me-3"></i>Pontos de Coleta
-                </Link>
-              </div>
-
-              <div className="nav-section">
-                <h6><i className="bi bi-book me-2" style={{color: '#059669'}}></i>Educação Ambiental</h6>
-                <Link className={`nav-link-custom ${location.pathname === '/materiais' ? 'nav-link-active' : ''}`} to="/materiais" onClick={fechar}>
-                  <i className="bi bi-recycle me-3"></i>Materiais Recicláveis
-                </Link>
-                <Link className={`nav-link-custom ${location.pathname === '/residuos' ? 'nav-link-active' : ''}`} to="/residuos" onClick={fechar}>
-                  <i className="bi bi-trash me-3"></i>Resíduos
-                </Link>
-                <Link className={`nav-link-custom ${location.pathname === '/faq' ? 'nav-link-active' : ''}`} to="/faq" onClick={fechar}>
-                  <i className="bi bi-question-circle me-3"></i>Perguntas Frequentes
+                <Link className={`nav-item-clay ${isActive('/pontos') ? 'active' : ''}`} to="/pontos" onClick={fechar}>
+                  <i className="bi bi-geo-alt-fill"></i>Pontos de Coleta
                 </Link>
               </div>
 
-              <div className="nav-section">
-                <h6><i className="bi bi-person-circle me-2" style={{color: '#059669'}}></i>Conta</h6>
+              <div className="drawer-section">
+                <h6><i className="bi bi-book me-2"></i>Educação Ambiental</h6>
+                <Link className={`nav-item-clay ${isActive('/materiais') ? 'active' : ''}`} to="/materiais" onClick={fechar}>
+                  <i className="bi bi-recycle"></i>Materiais Recicláveis
+                </Link>
+                <Link className={`nav-item-clay ${isActive('/residuos') ? 'active' : ''}`} to="/residuos" onClick={fechar}>
+                  <i className="bi bi-trash3-fill"></i>Resíduos
+                </Link>
+                <Link className={`nav-item-clay ${isActive('/faq') ? 'active' : ''}`} to="/faq" onClick={fechar}>
+                  <i className="bi bi-question-circle-fill"></i>Perguntas Frequentes
+                </Link>
+              </div>
+
+              <div className="drawer-section">
+                <h6><i className="bi bi-person-circle me-2"></i>Conta</h6>
                 {isLogado() ? (
-                  <div style={{background: usuario.dados?.nivelAcesso === 'ADMIN' ? 'linear-gradient(135deg, #d1fae5, #a7f3d0)' : 'linear-gradient(135deg, #dcfce7, #bbf7d0)', borderRadius: '15px', padding: '1rem', border: `2px solid ${usuario.dados?.nivelAcesso === 'ADMIN' ? '#34d399' : '#86efac'}`}}>
+                  <div style={{ background: 'rgba(255,255,255,0.6)', borderRadius: '16px', padding: '1rem', border: '2px solid rgba(255,255,255,0.7)', boxShadow: '3px 3px 0px rgba(0,0,0,0.08)' }}>
                     <div className="text-center mb-3">
-                      <div className="badge px-3 py-2 rounded-pill" style={{fontSize: '0.75rem', fontWeight: 600, background: usuario.dados?.nivelAcesso === 'ADMIN' ? 'linear-gradient(135deg,#064e3b,#059669)' : '#22c55e', color:'white'}}>
+                      <span className="badge" style={{ background: 'linear-gradient(135deg,#16a34a,#22c55e)', color: 'white', padding: '6px 14px', fontSize: '0.72rem', boxShadow: '2px 2px 0px rgba(0,0,0,0.12)' }}>
                         {usuario.tipo === 'ponto' ? 'PONTO LOGADO' : usuario.dados?.nivelAcesso === 'ADMIN' ? 'ADMINISTRADOR' : 'USUÁRIO LOGADO'}
-                      </div>
-                      <div className="mt-1"><small className="text-muted fw-medium">{usuario.dados?.nome?.split(' ')[0] || usuario.dados?.email}</small></div>
+                      </span>
+                      <div className="mt-1"><small style={{ color: '#166534', fontWeight: 600 }}>{usuario.dados?.nome?.split(' ')[0] || usuario.dados?.email}</small></div>
                     </div>
                     {usuario.dados?.nivelAcesso === 'ADMIN' ? (
                       <>
-                        <Link className={`nav-link-custom mb-1 nav-link-admin ${location.pathname === '/cadastrar' ? 'nav-link-admin-active' : ''}`} to="/cadastrar" onClick={fechar}>
-                          <i className="bi bi-plus-circle me-3"></i>Adicionar Ponto
+                        <Link className={`nav-item-clay ${isActive('/cadastrar') ? 'active-dark' : ''}`} to="/cadastrar" onClick={fechar}>
+                          <i className="bi bi-plus-circle-fill"></i>Adicionar Ponto
                         </Link>
-                        <Link className={`nav-link-custom nav-link-admin ${location.pathname === '/gerenciar-contas' ? 'nav-link-admin-active' : ''}`} to="/gerenciar-contas" onClick={fechar}>
-                          <i className="bi bi-people me-3"></i>Gerenciar Contas
+                        <Link className={`nav-item-clay ${isActive('/gerenciar-contas') ? 'active-dark' : ''}`} to="/gerenciar-contas" onClick={fechar}>
+                          <i className="bi bi-people-fill"></i>Gerenciar Contas
                         </Link>
                       </>
                     ) : usuario.tipo === 'usuario' ? (
                       <>
                         {usuario.pontoVinculado && (
-                          <Link className={`nav-link-custom ${location.pathname === '/personalizar-ponto' ? 'nav-link-active' : ''}`} to="/personalizar-ponto" onClick={fechar}>
-                            <i className="bi bi-gear me-3"></i>Gerenciar Meu Ponto
+                          <Link className={`nav-item-clay ${isActive('/personalizar-ponto') ? 'active' : ''}`} to="/personalizar-ponto" onClick={fechar}>
+                            <i className="bi bi-gear-fill"></i>Gerenciar Meu Ponto
                           </Link>
                         )}
                         {!usuario.pontoVinculado && (
-                          <Link className={`nav-link-custom ${location.pathname === '/cadastrar' ? 'nav-link-active' : ''}`} to="/cadastrar" onClick={fechar}>
-                            <i className="bi bi-plus-circle me-3"></i>Cadastrar Ponto de Coleta
+                          <Link className={`nav-item-clay ${isActive('/cadastrar') ? 'active' : ''}`} to="/cadastrar" onClick={fechar}>
+                            <i className="bi bi-plus-circle-fill"></i>Cadastrar Ponto
                           </Link>
                         )}
                       </>
                     ) : null}
-                    <button className="nav-link-custom w-100 text-start mt-2" onClick={handleLogout}
-                      style={{color: '#dc2626', background: 'linear-gradient(135deg, #fee2e2, #fecaca)', border: '2px solid #ef4444', cursor: 'pointer'}}>
-                      <i className="bi bi-box-arrow-right me-3"></i>Sair da Conta
+                    <button className="nav-item-clay nav-item-logout w-100 text-start mt-2" onClick={handleLogout} style={{ cursor: 'pointer' }}>
+                      <i className="bi bi-box-arrow-right"></i>Sair da Conta
                     </button>
                   </div>
                 ) : (
                   <>
-                    <div style={{background: 'linear-gradient(135deg, #dcfce7, #bbf7d0)', borderRadius: '15px', padding: '1rem', marginBottom: '1rem', border: '2px solid #86efac'}}>
-                      <div className="text-center mb-2"><div className="badge bg-success px-3 py-1 rounded-pill" style={{fontSize: '0.75rem'}}>CADASTRAR</div></div>
-                      <Link className={`nav-link-custom ${location.pathname === '/cadastro-usuario' ? 'nav-link-active' : ''}`} to="/cadastro-usuario" onClick={fechar}>
-                        <i className="bi bi-person-plus me-3"></i>Usuário
+                    <div style={{ background: 'rgba(220,252,231,0.7)', borderRadius: '16px', padding: '1rem', marginBottom: '0.75rem', border: '2px solid rgba(134,239,172,0.6)', boxShadow: '3px 3px 0px rgba(0,0,0,0.08)' }}>
+                      <div className="text-center mb-2">
+                        <span className="badge bg-success" style={{ fontSize: '0.7rem', boxShadow: '2px 2px 0px rgba(0,0,0,0.10)' }}>CADASTRAR</span>
+                      </div>
+                      <Link className={`nav-item-clay ${isActive('/cadastro-usuario') ? 'active' : ''}`} to="/cadastro-usuario" onClick={fechar}>
+                        <i className="bi bi-person-plus-fill"></i>Usuário
                       </Link>
                     </div>
-                    <div style={{background: 'linear-gradient(135deg, #dbeafe, #bfdbfe)', borderRadius: '15px', padding: '1rem', border: '2px solid #3b82f6'}}>
-                      <div className="text-center mb-2"><div className="badge bg-primary px-3 py-1 rounded-pill" style={{fontSize: '0.75rem'}}>LOGIN</div></div>
-                      <Link className={`nav-link-custom nav-link-login ${location.pathname === '/login-usuario' ? 'nav-link-login-active' : ''}`} to="/login-usuario" onClick={fechar}>
-                        <i className="bi bi-person-circle me-3"></i>Entrar na conta
+                    <div style={{ background: 'rgba(219,234,254,0.7)', borderRadius: '16px', padding: '1rem', border: '2px solid rgba(147,197,253,0.6)', boxShadow: '3px 3px 0px rgba(0,0,0,0.08)' }}>
+                      <div className="text-center mb-2">
+                        <span className="badge bg-primary" style={{ fontSize: '0.7rem', boxShadow: '2px 2px 0px rgba(0,0,0,0.10)' }}>LOGIN</span>
+                      </div>
+                      <Link className={`nav-item-clay ${isActive('/login-usuario') ? 'active-blue' : ''}`} to="/login-usuario" onClick={fechar}>
+                        <i className="bi bi-person-circle"></i>Entrar na conta
                       </Link>
                     </div>
                   </>
                 )}
               </div>
 
-              <div className="nav-section">
-                <h6><i className="bi bi-info-circle me-2" style={{color: '#059669'}}></i>Informações</h6>
-                <Link className={`nav-link-custom ${location.pathname === '/sobre' ? 'nav-link-active' : ''}`} to="/sobre" onClick={fechar}>
-                  <i className="bi bi-people me-3"></i>Sobre o VerDenovo
+              <div className="drawer-section">
+                <h6><i className="bi bi-info-circle me-2"></i>Informações</h6>
+                <Link className={`nav-item-clay ${isActive('/sobre') ? 'active' : ''}`} to="/sobre" onClick={fechar}>
+                  <i className="bi bi-people-fill"></i>Sobre o VerDenovo
                 </Link>
-                <Link className={`nav-link-custom ${location.pathname === '/conscientizacao' ? 'nav-link-active' : ''}`} to="/conscientizacao" onClick={fechar}>
-                  <i className="bi bi-tree me-3"></i>Conscientização e Educação Ambiental
+                <Link className={`nav-item-clay ${isActive('/conscientizacao') ? 'active' : ''}`} to="/conscientizacao" onClick={fechar}>
+                  <i className="bi bi-tree-fill"></i>Conscientização Ambiental
                 </Link>
               </div>
             </div>

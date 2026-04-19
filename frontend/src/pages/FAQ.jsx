@@ -99,20 +99,20 @@ function FAQ() {
   }, []);
 
   return (
-    <div>
+    <div className="page-content" style={{ paddingBottom: '2rem' }}>
       {/* Hero */}
-      <div className="mb-5 position-relative overflow-hidden" style={{ minHeight: '45vh', background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 50%, #cbd5e1 100%)', borderRadius: '25px', padding: '4rem 2rem' }}>
-        <div className="position-absolute animate-float" style={{ top: '15%', right: '10%', width: '80px', height: '80px', background: 'rgba(5,150,105,0.1)', borderRadius: '50%' }}></div>
-        <div className="position-absolute animate-float animate-delay-2" style={{ bottom: '20%', left: '5%', width: '60px', height: '60px', background: 'rgba(16,185,129,0.1)', borderRadius: '50%' }}></div>
-        <div className="position-absolute animate-rotate" style={{ top: '30%', left: '15%', width: '40px', height: '40px', background: 'rgba(34,197,94,0.08)', borderRadius: '50%' }}></div>
+      <div className="clay mb-5 animate-fadeInUp" style={{ padding: '4rem 2rem', background: 'rgba(255,255,255,0.7)', position: 'relative', overflow: 'hidden' }}>
+        <div className="animate-float" style={{ position: 'absolute', top: '15%', right: '10%', width: '80px', height: '80px', background: 'rgba(74,222,128,0.2)', borderRadius: '50%', border: '2px solid rgba(74,222,128,0.3)' }}></div>
+        <div className="animate-float animate-delay-2" style={{ position: 'absolute', bottom: '20%', left: '5%', width: '60px', height: '60px', background: 'rgba(34,197,94,0.15)', borderRadius: '50%' }}></div>
         <div className="text-center position-relative" style={{ zIndex: 2 }}>
-          <div className="d-inline-flex align-items-center bg-success bg-opacity-10 text-success px-4 py-2 rounded-pill mb-4 animate-fadeInUp" style={{ fontSize: '0.95rem', fontWeight: '600' }}>
+          <div className="d-inline-flex align-items-center px-4 py-2 rounded-pill mb-4 animate-fadeInUp"
+            style={{ background: 'rgba(74,222,128,0.2)', border: '2px solid rgba(74,222,128,0.4)', boxShadow: '3px 3px 0px rgba(0,0,0,0.08)', fontSize: '0.9rem', fontWeight: 700, color: '#166534' }}>
             <i className="bi bi-robot me-2"></i>Assistente Virtual
           </div>
-          <h1 className="display-3 fw-bold mb-4 animate-fadeInUp animate-delay-1" style={{ lineHeight: '1.1', color: '#1e293b', letterSpacing: '-0.02em' }}>
-            VerX — <span style={{ color: '#059669' }}>Tire suas Dúvidas</span>
+          <h1 className="animate-fadeInUp animate-delay-1" style={{ fontSize: 'clamp(2rem,5vw,3.2rem)', fontWeight: 800, color: '#14532d', letterSpacing: '-0.03em', marginBottom: '1rem' }}>
+            VerX — <span style={{ color: '#16a34a' }}>Tire suas Dúvidas</span>
           </h1>
-          <p className="fs-4 mb-4 text-muted animate-fadeInUp animate-delay-2" style={{ lineHeight: '1.6', maxWidth: '600px', margin: '0 auto' }}>
+          <p className="animate-fadeInUp animate-delay-2" style={{ fontSize: '1.05rem', color: '#3d5a3d', maxWidth: '560px', margin: '0 auto', lineHeight: 1.7 }}>
             Converse com nosso assistente e aprenda sobre reciclagem e descarte correto
           </p>
         </div>
@@ -121,8 +121,8 @@ function FAQ() {
       <div className="row g-4 justify-content-center">
         {/* Atalhos */}
         <div className="col-lg-4">
-          <div className="modern-card h-100" style={{ border: 'none', overflow: 'hidden' }}>
-            <div className="p-4" style={{ background: 'linear-gradient(135deg, #059669, #10b981)', borderRadius: '25px 25px 0 0' }}>
+          <div className="clay h-100" style={{ overflow: 'hidden', background: 'rgba(255,255,255,0.75)' }}>
+            <div className="p-4" style={{ background: 'linear-gradient(135deg, #16a34a, #22c55e)', borderRadius: '22px 22px 0 0', borderBottom: '2px solid rgba(255,255,255,0.3)' }}>
               <div className="d-flex align-items-center gap-3">
                 <div className="d-flex align-items-center justify-content-center" style={{ width: '48px', height: '48px', background: 'rgba(255,255,255,0.2)', borderRadius: '14px' }}>
                   <i className="bi bi-grid-3x3-gap text-white" style={{ fontSize: '1.3rem' }}></i>
@@ -137,10 +137,10 @@ function FAQ() {
               {menuOpcoes.map((op) => (
                 <button key={op.num} onClick={() => handleSendMessage(op.num)}
                   className="w-100 text-start mb-2 d-flex align-items-center gap-3"
-                  style={{ background: 'rgba(5,150,105,0.05)', border: '1px solid rgba(5,150,105,0.15)', borderRadius: '12px', padding: '0.75rem 1rem', cursor: 'pointer', transition: 'all 0.2s ease' }}
+                  style={{ background: 'rgba(74,222,128,0.1)', border: '2px solid rgba(74,222,128,0.25)', borderRadius: '14px', padding: '0.75rem 1rem', cursor: 'pointer', transition: 'all 0.2s ease', boxShadow: '2px 2px 0px rgba(0,0,0,0.07)' }}
                   onMouseEnter={handleMouseEnterBtn}
                   onMouseLeave={handleMouseLeaveBtn}>
-                  <span className="d-flex align-items-center justify-content-center fw-bold" style={{ width: '28px', height: '28px', background: 'linear-gradient(135deg, #059669, #10b981)', borderRadius: '8px', color: 'white', fontSize: '0.8rem', flexShrink: 0 }}>
+                  <span className="d-flex align-items-center justify-content-center fw-bold" style={{ width: '28px', height: '28px', background: 'linear-gradient(135deg, #16a34a, #22c55e)', borderRadius: '8px', color: 'white', fontSize: '0.8rem', flexShrink: 0, boxShadow: '2px 2px 0px rgba(0,0,0,0.12)' }}>
                     {op.num}
                   </span>
                   <span style={{ color: '#374151', fontSize: '0.9rem', fontWeight: '500' }}>{op.label}</span>
@@ -152,9 +152,9 @@ function FAQ() {
 
         {/* Chat */}
         <div className="col-lg-8">
-          <div className="modern-card" style={{ border: 'none', overflow: 'hidden' }}>
+          <div className="clay" style={{ overflow: 'hidden', background: 'rgba(255,255,255,0.75)' }}>
             {/* Header */}
-            <div className="d-flex align-items-center justify-content-between p-4" style={{ background: 'linear-gradient(135deg, #059669, #10b981)' }}>
+            <div className="d-flex align-items-center justify-content-between p-4" style={{ background: 'linear-gradient(135deg, #16a34a, #22c55e)', borderBottom: '2px solid rgba(255,255,255,0.3)' }}>
               <div className="d-flex align-items-center gap-3">
                 <div className="d-flex align-items-center justify-content-center animate-pulse" style={{ width: '52px', height: '52px', background: 'rgba(255,255,255,0.2)', borderRadius: '50%', border: '3px solid rgba(255,255,255,0.3)' }}>
                   <i className="bi bi-robot text-white" style={{ fontSize: '1.5rem' }}></i>
@@ -174,7 +174,7 @@ function FAQ() {
             </div>
 
             {/* Mensagens */}
-            <div ref={chatContainerRef} style={{ height: '420px', overflowY: 'auto', padding: '1.5rem', background: 'linear-gradient(135deg, #f8fafc, #f1f5f9)', scrollbarWidth: 'none' }}>
+            <div ref={chatContainerRef} style={{ height: '420px', overflowY: 'auto', padding: '1.5rem', background: 'linear-gradient(135deg, #f0fdf4, #dcfce7)', scrollbarWidth: 'none' }}>
               {messages.map((msg, index) => (
                 <div key={index} className={`d-flex mb-4 ${msg.type === 'user' ? 'justify-content-end' : 'justify-content-start'}`}>
                   {msg.type === 'bot' && (
@@ -222,7 +222,7 @@ function FAQ() {
             </div>
 
             {/* Input */}
-            <div className="p-4" style={{ background: 'white', borderTop: '1px solid rgba(0,0,0,0.06)' }}>
+            <div className="p-4" style={{ background: 'rgba(255,255,255,0.9)', borderTop: '2px solid rgba(255,255,255,0.6)' }}>
               <div className="d-flex gap-3">
                 <div style={{ flex: 1, position: 'relative' }}>
                   <input type="text" className="form-control"
@@ -236,7 +236,7 @@ function FAQ() {
                   />
                 </div>
                 <button onClick={() => handleSendMessage()}
-                  style={{ width: '52px', height: '52px', background: 'linear-gradient(135deg, #059669, #10b981)', border: 'none', borderRadius: '14px', color: 'white', fontSize: '1.1rem', cursor: 'pointer', boxShadow: '0 4px 15px rgba(5,150,105,0.3)', flexShrink: 0, transition: 'all 0.2s ease' }}
+                  style={{ width: '52px', height: '52px', background: 'linear-gradient(135deg, #16a34a, #22c55e)', border: '2px solid rgba(255,255,255,0.4)', borderRadius: '14px', color: 'white', fontSize: '1.1rem', cursor: 'pointer', boxShadow: '4px 4px 0px rgba(0,0,0,0.12)', flexShrink: 0, transition: 'all 0.2s ease' }}
                   onMouseEnter={handleMouseEnterSend}
                   onMouseLeave={handleMouseLeaveSend}>
                   <i className="bi bi-send-fill"></i>

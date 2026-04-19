@@ -43,7 +43,7 @@ function Layout() {
     <div className="App">
       <ScrollToTop />
       <Navbar />
-      <div className="container" style={{ marginTop: isAuthPage ? '0' : '88px' }}>
+      <div className="container">
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/pontos" element={<PontosColeta />} />

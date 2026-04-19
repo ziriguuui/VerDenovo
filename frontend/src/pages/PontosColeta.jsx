@@ -97,11 +97,11 @@ function PontoCard({ ponto, onClick }) {
       onMouseLeave={() => setHovered(false)}
       style={{
         borderRadius: '20px',
-        background: 'white',
-        border: hovered ? '1.5px solid #d1fae5' : '1.5px solid #f0f0f0',
+        background: 'rgba(255,255,255,0.8)',
+        border: hovered ? '2px solid rgba(74,222,128,0.5)' : '2px solid rgba(255,255,255,0.6)',
         boxShadow: hovered
-          ? '0 20px 48px rgba(5,150,105,0.13), 0 4px 16px rgba(0,0,0,0.06)'
-          : '0 2px 12px rgba(0,0,0,0.06)',
+          ? '6px 6px 0px rgba(0,0,0,0.12), 0 16px 40px rgba(5,150,105,0.12)'
+          : '4px 4px 0px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.06)',
         transform: hovered ? 'translateY(-6px)' : 'translateY(0)',
         transition: 'all 0.25s ease',
         cursor: 'pointer',
@@ -337,12 +337,12 @@ function PontosColeta() {
   return (
     <>
       {/* Page background */}
-      <div style={{ position: 'fixed', inset: 0, background: '#f4f7f5', zIndex: -1, pointerEvents: 'none' }} />
+      <div style={{ position: 'fixed', inset: 0, background: 'linear-gradient(135deg, #d4edda 0%, #c8e6c9 40%, #dcedc8 100%)', zIndex: -1, pointerEvents: 'none' }} />
 
-      <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '2rem 0 3rem' }}>
+      <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '5rem 0 3rem' }}>
 
       {/* Hero */}
-      <div className="mb-5 position-relative overflow-hidden animate-fadeInUp" style={{ background: 'linear-gradient(135deg, #064e3b 0%, #065f46 40%, #0d9488 100%)', borderRadius: '28px', padding: '4rem 2rem 3.5rem' }}>
+      <div className="mb-5 position-relative overflow-hidden animate-fadeInUp" style={{ background: 'linear-gradient(135deg, #14532d 0%, #166534 40%, #15803d 100%)', borderRadius: '28px', padding: '4rem 2rem 3.5rem', border: '2px solid rgba(74,222,128,0.2)', boxShadow: '6px 6px 0px rgba(0,0,0,0.14), 0 16px 48px rgba(0,0,0,0.10)' }}>
         {/* Orbs decorativos */}
         <div className="position-absolute" style={{ top: '-40px', right: '-40px', width: '220px', height: '220px', background: 'rgba(255,255,255,0.04)', borderRadius: '50%' }} />
         <div className="position-absolute" style={{ bottom: '-60px', left: '-30px', width: '180px', height: '180px', background: 'rgba(255,255,255,0.04)', borderRadius: '50%' }} />
@@ -350,7 +350,7 @@ function PontosColeta() {
 
         <div className="text-center position-relative" style={{ zIndex: 2 }}>
           {/* Badge */}
-          <div className="d-inline-flex align-items-center px-4 py-2 rounded-pill mb-4 animate-fadeInUp" style={{ background: 'rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.9)', fontWeight: 600, fontSize: '0.78rem', letterSpacing: '0.08em', textTransform: 'uppercase', border: '1px solid rgba(255,255,255,0.18)', backdropFilter: 'blur(8px)' }}>
+          <div className="d-inline-flex align-items-center px-4 py-2 rounded-pill mb-4 animate-fadeInUp" style={{ background: 'rgba(255,255,255,0.15)', color: 'rgba(255,255,255,0.9)', fontWeight: 700, fontSize: '0.78rem', letterSpacing: '0.08em', textTransform: 'uppercase', border: '2px solid rgba(255,255,255,0.2)', backdropFilter: 'blur(8px)', boxShadow: '3px 3px 0px rgba(0,0,0,0.10)' }}>
             <i className="bi bi-recycle me-2"></i>Reciclagem
           </div>
 
@@ -373,7 +373,7 @@ function PontosColeta() {
               { icon: 'bi-leaf-fill',     label: 'Sustentável',   value: '100%',        iconColor: '#65a30d', iconBg: '#ecfccb' },
             ].map((s, i) => (
               <div key={i} className="d-flex align-items-center gap-3 px-4 py-3 rounded-4"
-                style={{ background: 'white', boxShadow: '0 8px 24px rgba(0,0,0,0.18)', minWidth: '160px', border: '1px solid rgba(255,255,255,0.6)' }}>
+                style={{ background: 'rgba(255,255,255,0.9)', boxShadow: '4px 4px 0px rgba(0,0,0,0.12)', minWidth: '160px', border: '2px solid rgba(255,255,255,0.7)', borderRadius: '18px' }}>
                 <div className="d-flex align-items-center justify-content-center rounded-3 flex-shrink-0"
                   style={{ width: '42px', height: '42px', background: s.iconBg }}>
                   <i className={`bi ${s.icon}`} style={{ color: s.iconColor, fontSize: '1.15rem' }}></i>
@@ -395,7 +395,7 @@ function PontosColeta() {
           {(busca || filtroMateriais.length > 0) && (
             <button className="btn fw-semibold px-4"
               onClick={() => { setBusca(''); setFiltroMateriais([]); }}
-              style={{ borderRadius: '14px', border: '1.5px solid #fca5a5', background: '#fff1f2', color: '#ef4444', height: '58px', whiteSpace: 'nowrap', fontSize: '0.85rem', flexShrink: 0 }}>
+              style={{ borderRadius: '14px', border: '2px solid rgba(252,165,165,0.6)', background: 'rgba(254,226,226,0.7)', color: '#ef4444', height: '58px', whiteSpace: 'nowrap', fontSize: '0.85rem', flexShrink: 0, boxShadow: '3px 3px 0px rgba(0,0,0,0.08)' }}>
               <i className="bi bi-x-lg me-1"></i>Limpar
             </button>
           )}
@@ -488,7 +488,7 @@ function PontosColeta() {
             style={{ backgroundColor: 'rgba(0,0,0,0.6)', zIndex: 1050, backdropFilter: 'blur(8px)' }}
             onClick={e => e.target === e.currentTarget && setPontoSelecionado(null)}>
             <div className="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable" style={{ margin: '1.5rem auto' }}>
-              <div className="modal-content modal-pontos-content border-0" style={{ borderRadius: '28px', overflow: 'hidden', boxShadow: '0 32px 80px rgba(0,0,0,0.25)' }}>
+              <div className="modal-content modal-pontos-content border-0" style={{ borderRadius: '28px', overflow: 'hidden', boxShadow: '8px 8px 0px rgba(0,0,0,0.15), 0 32px 80px rgba(0,0,0,0.20)', border: '2px solid rgba(255,255,255,0.6)' }}>
 
               {/* Header */}
               <div style={{ background: 'linear-gradient(135deg, #052e16 0%, #064e3b 50%, #065f46 100%)', padding: '2.25rem 2rem 2rem', boxShadow: '0 4px 20px rgba(0,0,0,0.15)' }}>

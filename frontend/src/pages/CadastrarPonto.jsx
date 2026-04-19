@@ -178,8 +178,8 @@ function CadastrarPonto() {
   }
 
   return (
-    <div style={{minHeight: '100vh', background: '#f8fffe', padding: '2rem 0'}}>
-      <div style={{background: 'rgba(255,255,255,0.95)', borderRadius: '20px', boxShadow: '0 20px 40px rgba(0,0,0,0.1)', overflow: 'hidden', maxWidth: '800px', margin: '0 auto'}}>
+    <div className="page-content" style={{paddingBottom: '2rem'}}>
+      <div style={{background: 'rgba(255,255,255,0.78)', backdropFilter: 'blur(12px)', borderRadius: '24px', border: '2px solid rgba(255,255,255,0.6)', boxShadow: '6px 6px 0px rgba(0,0,0,0.12), 0 8px 32px rgba(0,0,0,0.08)', overflow: 'hidden', maxWidth: '800px', margin: '0 auto'}}>
 
         <div style={{background: 'linear-gradient(135deg, #10b981, #059669)', padding: '2rem', textAlign: 'center'}}>
           <div style={{width: '80px', height: '80px', background: 'rgba(255,255,255,0.2)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem', fontSize: '2rem'}}>

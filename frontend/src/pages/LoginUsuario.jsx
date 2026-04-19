@@ -11,83 +11,6 @@ function LoginUsuario() {
   const { loginUsuario } = useAuth();
   const navigate = useNavigate();
 
-  const styles = `
-    .login-container {
-      min-height: 100vh;
-      background: #f8fffe;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 100px 20px 20px 20px;
-    }
-    .login-card {
-      background: rgba(255, 255, 255, 0.95);
-      backdrop-filter: blur(10px);
-      border-radius: 20px;
-      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      overflow: hidden;
-      max-width: 450px;
-      width: 100%;
-    }
-    .login-header {
-      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-      padding: 2rem;
-      text-align: center;
-    }
-    .login-icon {
-      width: 80px;
-      height: 80px;
-      background: rgba(255, 255, 255, 0.2);
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin: 0 auto 1rem;
-      font-size: 2rem;
-    }
-    .form-floating input {
-      border: 2px solid #e5e7eb;
-      border-radius: 12px;
-      padding: 1rem;
-      transition: all 0.3s ease;
-      background: #f9fafb;
-    }
-    .form-floating input:focus {
-      border-color: #10b981;
-      box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
-      background: white;
-    }
-    .btn-login {
-      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-      border: none;
-      border-radius: 12px;
-      padding: 1rem;
-      font-weight: 600;
-      transition: all 0.3s ease;
-    }
-    .btn-login:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 10px 25px rgba(16, 185, 129, 0.3);
-    }
-    .password-toggle {
-      position: absolute;
-      right: 15px;
-      top: 50%;
-      transform: translateY(-50%);
-      background: none;
-      border: none;
-      color: #6b7280;
-      cursor: pointer;
-      z-index: 10;
-    }
-    @keyframes slideInUp {
-      from { opacity: 0; transform: translateY(30px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    .animate-slide-up { animation: slideInUp 0.6s ease-out; }
-  `;
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setCarregando(true);
@@ -103,102 +26,81 @@ function LoginUsuario() {
   };
 
   return (
-    <div className="login-container">
-      <style>{styles}</style>
-      <div className="login-card animate-slide-up">
-        <div className="login-header">
-          <div className="login-icon">
-            <i className="bi bi-person-circle text-white"></i>
+    <div className="page-content" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem 1rem' }}>
+      <div className="animate-scaleIn" style={{ width: '100%', maxWidth: '440px' }}>
+
+        {/* Card principal */}
+        <div className="clay" style={{ overflow: 'hidden', background: 'rgba(255,255,255,0.78)' }}>
+          {/* Header */}
+          <div style={{
+            background: 'linear-gradient(135deg, #16a34a 0%, #22c55e 100%)',
+            padding: '2.5rem 2rem',
+            textAlign: 'center',
+            borderBottom: '2px solid rgba(255,255,255,0.3)',
+            boxShadow: '0 4px 0px rgba(0,0,0,0.08)',
+          }}>
+            <div style={{ width: '80px', height: '80px', background: 'rgba(255,255,255,0.2)', borderRadius: '50%', border: '2px solid rgba(255,255,255,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem', boxShadow: '4px 4px 0px rgba(0,0,0,0.12)', fontSize: '2rem' }}>
+              <i className="bi bi-person-circle text-white"></i>
+            </div>
+            <h3 style={{ color: 'white', fontWeight: 800, margin: 0, letterSpacing: '-0.02em' }}>Bem-vindo de volta!</h3>
+            <p style={{ color: 'rgba(255,255,255,0.75)', margin: '6px 0 0', fontSize: '0.9rem' }}>Entre na sua conta</p>
           </div>
-          <h3 className="text-white mb-0 fw-bold">Bem-vindo de volta!</h3>
-          <p className="text-white-50 mb-0 mt-2">Entre na sua conta</p>
-        </div>
-        
-        <div className="p-4">
-          {erro && (
-            <div className="alert alert-danger border-0 rounded-3 mb-4" role="alert">
-              <i className="bi bi-exclamation-triangle me-2"></i>
-              {erro}
-            </div>
-          )}
-          
-          <form onSubmit={handleSubmit}>
-            <div className="form-floating mb-3">
-              <input
-                type="email"
-                className="form-control"
-                id="email"
-                placeholder="seu@email.com"
-                maxLength="100"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-              <label htmlFor="email">
-                <i className="bi bi-envelope me-2"></i>Email
-              </label>
-            </div>
-            
-            <div className="form-floating position-relative mb-4">
-              <input
-                type={mostrarSenha ? 'text' : 'password'}
-                className="form-control"
-                id="senha"
-                placeholder="Sua senha"
-                maxLength="100"
-                value={senha}
-                onChange={(e) => setSenha(e.target.value)}
-                required
-              />
-              <label htmlFor="senha">
-                <i className="bi bi-lock me-2"></i>Senha
-              </label>
-              <button
-                type="button"
-                className="password-toggle"
-                onClick={() => setMostrarSenha(!mostrarSenha)}
-              >
-                <i className={`bi ${mostrarSenha ? 'bi-eye-slash' : 'bi-eye'}`}></i>
+
+          {/* Body */}
+          <div style={{ padding: '2rem' }}>
+            {erro && (
+              <div className="clay-sm mb-4" style={{ background: 'rgba(254,226,226,0.8)', border: '2px solid rgba(252,165,165,0.6)', padding: '0.9rem 1rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <i className="bi bi-exclamation-triangle-fill" style={{ color: '#dc2626' }}></i>
+                <span style={{ color: '#991b1b', fontSize: '0.88rem', fontWeight: 500 }}>{erro}</span>
+              </div>
+            )}
+
+            <form onSubmit={handleSubmit}>
+              <div className="mb-3">
+                <label style={{ fontWeight: 600, color: '#166534', fontSize: '0.85rem', marginBottom: '6px', display: 'block' }}>
+                  <i className="bi bi-envelope me-2"></i>Email
+                </label>
+                <input type="email" className="form-control" placeholder="seu@email.com" maxLength="100"
+                  value={email} onChange={e => setEmail(e.target.value)} required
+                  style={{ padding: '0.85rem 1rem', fontSize: '0.95rem' }} />
+              </div>
+
+              <div className="mb-4" style={{ position: 'relative' }}>
+                <label style={{ fontWeight: 600, color: '#166534', fontSize: '0.85rem', marginBottom: '6px', display: 'block' }}>
+                  <i className="bi bi-lock me-2"></i>Senha
+                </label>
+                <input type={mostrarSenha ? 'text' : 'password'} className="form-control" placeholder="Sua senha" maxLength="100"
+                  value={senha} onChange={e => setSenha(e.target.value)} required
+                  style={{ padding: '0.85rem 3rem 0.85rem 1rem', fontSize: '0.95rem' }} />
+                <button type="button" onClick={() => setMostrarSenha(!mostrarSenha)}
+                  style={{ position: 'absolute', right: '14px', bottom: '12px', background: 'none', border: 'none', color: '#6b8f6b', cursor: 'pointer', fontSize: '1rem' }}>
+                  <i className={`bi ${mostrarSenha ? 'bi-eye-slash' : 'bi-eye'}`}></i>
+                </button>
+              </div>
+
+              <button type="submit" className="btn btn-success w-100 mb-3" disabled={carregando}
+                style={{ padding: '0.9rem', fontSize: '1rem' }}>
+                {carregando
+                  ? <><span className="spinner-border spinner-border-sm me-2"></span>Entrando...</>
+                  : <><i className="bi bi-box-arrow-in-right me-2"></i>Entrar</>}
               </button>
+            </form>
+
+            <div className="text-center mb-3">
+              <Link to="/recuperar-senha" style={{ color: '#16a34a', textDecoration: 'none', fontWeight: 600, fontSize: '0.88rem' }}>
+                <i className="bi bi-question-circle me-1"></i>Esqueceu sua senha?
+              </Link>
             </div>
 
-            
-            <div className="d-grid mb-4">
-              <button 
-                type="submit" 
-                className="btn btn-login text-white"
-                disabled={carregando}
-              >
-                {carregando ? (
-                  <>
-                    <span className="spinner-border spinner-border-sm me-2" role="status"></span>
-                    Entrando...
-                  </>
-                ) : (
-                  <>
-                    <i className="bi bi-box-arrow-in-right me-2"></i>
-                    Entrar
-                  </>
-                )}
-              </button>
+            <div style={{ borderTop: '2px solid rgba(255,255,255,0.6)', paddingTop: '1.25rem', textAlign: 'center' }}>
+              <p style={{ color: '#6b8f6b', marginBottom: '0.75rem', fontSize: '0.88rem' }}>Não tem uma conta?</p>
+              <Link to="/cadastro-usuario" className="btn btn-outline-success px-4">
+                <i className="bi bi-person-plus me-2"></i>Criar conta
+              </Link>
             </div>
-          </form>
-          
-          <div className="text-center mb-4">
-            <Link to="/recuperar-senha" className="text-decoration-none text-success fw-medium">
-              <i className="bi bi-question-circle me-1"></i>
-              Esqueceu sua senha?
-            </Link>
-          </div>
-          
-          <div className="text-center">
-            <p className="text-muted mb-2">Não tem uma conta?</p>
-            <Link to="/cadastro-usuario" className="btn btn-outline-success rounded-3 px-4">
-              <i className="bi bi-person-plus me-2"></i>
-              Criar conta
-            </Link>
           </div>
         </div>
+
       </div>
     </div>
   );
