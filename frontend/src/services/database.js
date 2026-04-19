@@ -14,7 +14,7 @@ class Database {
         id: 999999,
         nome: 'Administrador VerDenovo',
         email: 'vitorhugobate@gmail.com',
-        senha: '123456789Vi',
+        senha: '[PROTEGIDO]',
         nivelAcesso: 'ADMIN',
         foto: null,
         dataCadastro: new Date().toISOString(),
@@ -30,7 +30,7 @@ class Database {
           id: 1001,
           nome: 'João Silva',
           email: 'joao.silva@email.com',
-          senha: '123456',
+          senha: '[PROTEGIDO]',
           nivelAcesso: 'USER',
           foto: null,
           dataCadastro: new Date().toISOString(),
@@ -40,7 +40,7 @@ class Database {
           id: 1002,
           nome: 'Maria Santos',
           email: 'maria.santos@email.com',
-          senha: '123456',
+          senha: '[PROTEGIDO]',
           nivelAcesso: 'USER',
           foto: null,
           dataCadastro: new Date().toISOString(),
@@ -286,11 +286,7 @@ class Database {
   }
 
   buscarPonto(email, senha) {
-    // Para compatibilidade, buscar por email no sistema de usuários
-    const usuario = this.usuarios.find(u => u.email === email && u.senha === senha && u.statusUsuario === 'ATIVO');
-    if (usuario && usuario.nivelAcesso === 'ADMIN') {
-      return { email, nome: 'Administrador', tipo: 'admin' };
-    }
+    // Autenticação de pontos deve ser feita via API backend
     return null;
   }
 
@@ -327,7 +323,8 @@ class Database {
   }
 
   buscarEmpresa(email, senha) {
-    return this.empresas.find(e => e.email === email && e.senha === senha);
+    // Autenticação de empresas deve ser feita via API backend
+    return null;
   }
 
   listarEmpresas() {
@@ -365,7 +362,8 @@ class Database {
   }
 
   buscarUsuario(email, senha) {
-    return this.usuarios.find(u => u.email === email && u.senha === senha && u.statusUsuario === 'ATIVO');
+    // Autenticação de usuários deve ser feita via API backend
+    return null;
   }
 
   listarUsuarios() {

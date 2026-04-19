@@ -1,37 +1,29 @@
 package com.verdenovo.api.controller;
 
 import com.verdenovo.api.entity.Ponto;
-import com.verdenovo.api.entity.Categoria;
-import com.verdenovo.api.entity.Usuario;
 import com.verdenovo.api.repository.PontoRepository;
-import com.verdenovo.api.repository.CategoriaRepository;
 import com.verdenovo.api.repository.UsuarioRepository;
 import com.verdenovo.api.dto.*;
+import com.verdenovo.api.service.PontoService;
 import com.verdenovo.api.util.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
-import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/pontos")
-@CrossOrigin(origins = "*")
 public class PontoController {
     
     @Autowired
     private PontoRepository pontoRepository;
-    
-    @Autowired
-    private CategoriaRepository categoriaRepository;
-    
+
     @Autowired
     private UsuarioRepository usuarioRepository;
-    
+
     @Autowired
-    private PasswordEncoder passwordEncoder;
-    
+    private PontoService pontoService;
+
     @Autowired
     private JwtUtil jwtUtil;
 
@@ -46,102 +38,81 @@ public class PontoController {
     }
 
     @PostMapping
-    public ResponseEntity<com.verdenovo.api.dto.MessageResponse> criarPonto(@RequestBody Ponto ponto) {
-        try {
-            System.out.println("Dados recebidos: " + ponto.getNome());
-            
-            // Criptografar senha
-            if (ponto.getSenha() != null && !ponto.getSenha().isEmpty()) {
-                ponto.setSenha(passwordEncoder.encode(ponto.getSenha()));
-            }
-            
-            ponto.setDataCadastro(LocalDateTime.now());
-            ponto.setStatusPonto("ATIVO");
-            pontoRepository.save(ponto);
-            return ResponseEntity.ok(new com.verdenovo.api.dto.MessageResponse("Ponto cadastrado com sucesso"));
-        } catch (Exception e) {
-            System.out.println("Erro ao cadastrar ponto: " + e.getMessage());
-            e.printStackTrace();
-            return ResponseEntity.badRequest().body(new com.verdenovo.api.dto.MessageResponse("Erro: " + e.getMessage()));
-        }
+    public ResponseEntity<MessageResponse> criarPonto(@RequestBody Ponto ponto,
+            org.springframework.security.core.Authentication authentication) {
+        String emailLogado = authentication != null ? authentication.getName() : null;
+        Ponto salvo = pontoService.criarPonto(ponto, emailLogado);
+        boolean isAtivo = "ATIVO".equals(salvo.getStatusPonto());
+        return ResponseEntity.ok(new MessageResponse(
+            isAtivo ? "Ponto cadastrado e ativado com sucesso!" : "Ponto cadastrado com sucesso! Aguardando aprovação do administrador."
+        ));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<com.verdenovo.api.dto.MessageResponse> atualizarPonto(@PathVariable Long id, @RequestBody Ponto pontoAtualizado) {
-        try {
-            Ponto ponto = pontoRepository.findById(id).orElseThrow(() -> new RuntimeException("Ponto não encontrado"));
-            
-            ponto.setNome(pontoAtualizado.getNome());
-            ponto.setCep(pontoAtualizado.getCep());
-            ponto.setNumero(pontoAtualizado.getNumero());
-            ponto.setComplemento(pontoAtualizado.getComplemento());
-            ponto.setTelefone(pontoAtualizado.getTelefone());
-            ponto.setHoraFuncionamento(pontoAtualizado.getHoraFuncionamento());
-            ponto.setMaterial(pontoAtualizado.getMaterial());
-            
-            pontoRepository.save(ponto);
-            return ResponseEntity.ok(new com.verdenovo.api.dto.MessageResponse("Ponto atualizado com sucesso"));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(new com.verdenovo.api.dto.MessageResponse("Erro ao atualizar ponto: " + e.getMessage()));
-        }
+    public ResponseEntity<MessageResponse> atualizarPonto(@PathVariable Long id, @RequestBody Ponto pontoAtualizado,
+            org.springframework.security.core.Authentication authentication) {
+        String emailLogado = authentication != null ? authentication.getName() : null;
+        pontoService.atualizarPonto(id, pontoAtualizado, emailLogado);
+        return ResponseEntity.ok(new MessageResponse("Ponto atualizado com sucesso"));
     }
 
+    @GetMapping("/pendentes")
+    public List<Ponto> listarPontosPendentes() {
+        return pontoRepository.findByStatusPonto("PENDENTE");
+    }
+
+    @GetMapping("/meus")
+    public ResponseEntity<?> listarMeusPontos(org.springframework.security.core.Authentication authentication) {
+        if (authentication == null) return ResponseEntity.status(401).build();
+        String email = authentication.getName();
+        return usuarioRepository.findByEmail(email)
+            .map(u -> ResponseEntity.ok(pontoRepository.findByUsuarioId(u.getId())))
+            .orElse(ResponseEntity.ok(java.util.List.of()));
+    }
+
+    @PutMapping("/{id}/aprovar")
+    public ResponseEntity<MessageResponse> aprovarPonto(@PathVariable Long id) {
+        Ponto ponto = pontoRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Ponto não encontrado"));
+        ponto.setStatusPonto("ATIVO");
+        pontoRepository.save(ponto);
+        return ResponseEntity.ok(new MessageResponse("Ponto aprovado com sucesso"));
+    }
+
+    @PutMapping("/{id}/rejeitar")
+    public ResponseEntity<MessageResponse> rejeitarPonto(@PathVariable Long id) {
+        Ponto ponto = pontoRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Ponto não encontrado"));
+        ponto.setStatusPonto("REJEITADO");
+        pontoRepository.save(ponto);
+        return ResponseEntity.ok(new MessageResponse("Ponto rejeitado"));
+    }
     @PutMapping("/{id}/status")
-    public ResponseEntity<com.verdenovo.api.dto.MessageResponse> alterarStatusPonto(@PathVariable Long id) {
-        try {
-            Ponto ponto = pontoRepository.findById(id).orElseThrow(() -> new RuntimeException("Ponto não encontrado"));
-            String novoStatus = "ATIVO".equals(ponto.getStatusPonto()) ? "INATIVO" : "ATIVO";
-            ponto.setStatusPonto(novoStatus);
-            pontoRepository.save(ponto);
-            return ResponseEntity.ok(new com.verdenovo.api.dto.MessageResponse("Status do ponto alterado com sucesso"));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(new com.verdenovo.api.dto.MessageResponse("Erro ao alterar status: " + e.getMessage()));
-        }
+    public ResponseEntity<MessageResponse> alterarStatusPonto(@PathVariable Long id) {
+        Ponto ponto = pontoRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Ponto não encontrado"));
+        String novoStatus = "ATIVO".equals(ponto.getStatusPonto()) ? "INATIVO" : "ATIVO";
+        ponto.setStatusPonto(novoStatus);
+        pontoRepository.save(ponto);
+        return ResponseEntity.ok(new MessageResponse("Status do ponto alterado com sucesso"));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<com.verdenovo.api.dto.MessageResponse> deletarPonto(@PathVariable Long id) {
-        try {
-            pontoRepository.deleteById(id);
-            return ResponseEntity.ok(new com.verdenovo.api.dto.MessageResponse("Ponto excluído com sucesso"));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(new com.verdenovo.api.dto.MessageResponse("Erro ao excluir ponto"));
-        }
+    public ResponseEntity<MessageResponse> deletarPonto(@PathVariable Long id) {
+        pontoRepository.deleteById(id);
+        return ResponseEntity.ok(new MessageResponse("Ponto excluído com sucesso"));
     }
     
     @PostMapping("/login")
-    public ResponseEntity<?> loginPonto(@RequestBody PontoLoginRequest request) {
-        try {
-            System.out.println("Tentativa de login do ponto: " + request.getEmail());
-            Ponto ponto = pontoRepository.findByEmailAndStatusPonto(request.getEmail(), "ATIVO")
-                .orElseThrow(() -> new RuntimeException("Ponto não encontrado"));
-            
-            System.out.println("Ponto encontrado: " + ponto.getNome());
-            System.out.println("Verificando senha...");
-            
-            if (!passwordEncoder.matches(request.getSenha(), ponto.getSenha())) {
-                System.out.println("Senha incorreta para: " + request.getEmail());
-                throw new RuntimeException("Senha incorreta");
-            }
-            
-            System.out.println("Login bem-sucedido para: " + request.getEmail());
-            String token = jwtUtil.generateToken(ponto.getEmail());
-            PontoResponse pontoResponse = new PontoResponse(
-                ponto.getId(), 
-                ponto.getNome(), 
-                ponto.getEmail(),
-                ponto.getCep(),
-                ponto.getNumero(),
-                ponto.getComplemento(),
-                ponto.getTelefone(),
-                ponto.getHoraFuncionamento(),
-                ponto.getMaterial()
-            );
-            
-            return ResponseEntity.ok(new PontoLoginResponse(token, pontoResponse));
-        } catch (Exception e) {
-            System.out.println("Erro no login do ponto: " + e.getMessage());
-            return ResponseEntity.badRequest().body(new MessageResponse(e.getMessage()));
-        }
+    public ResponseEntity<PontoLoginResponse> loginPonto(@RequestBody PontoLoginRequest request) {
+        Ponto ponto = pontoService.loginPonto(request.getEmail(), request.getSenha());
+        String token = jwtUtil.generateToken(ponto.getEmail());
+        PontoResponse pontoResponse = new PontoResponse(
+                ponto.getId(), ponto.getNome(), ponto.getEmail(),
+                ponto.getCep(), ponto.getNumero(), ponto.getComplemento(),
+                ponto.getLogradouro(), ponto.getTelefone(),
+                ponto.getHoraFuncionamento(), ponto.getMaterial()
+        );
+        return ResponseEntity.ok(new PontoLoginResponse(token, pontoResponse));
     }
 }

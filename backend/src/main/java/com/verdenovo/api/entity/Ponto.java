@@ -2,6 +2,7 @@ package com.verdenovo.api.entity;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
 @Table(name = "Ponto")
@@ -34,6 +35,7 @@ public class Ponto {
     @Column(nullable = false, length = 400)
     private String material;
     
+    @JsonIgnore
     @Column(nullable = false, length = 100)
     private String senha;
     
@@ -42,6 +44,15 @@ public class Ponto {
     
     @Column(nullable = false, length = 20)
     private String statusPonto;
+
+    @Column(length = 500)
+    private String descricao;
+
+    @Column(length = 100)
+    private String logradouro;
+
+    @Column(name = "usuario_id")
+    private Long usuarioId;
 
     // Getters e Setters
     public Long getId() { return id; }
@@ -79,4 +90,13 @@ public class Ponto {
     
     public String getStatusPonto() { return statusPonto; }
     public void setStatusPonto(String statusPonto) { this.statusPonto = statusPonto; }
+
+    public String getDescricao() { return descricao; }
+    public void setDescricao(String descricao) { this.descricao = descricao; }
+
+    public String getLogradouro() { return logradouro; }
+    public void setLogradouro(String logradouro) { this.logradouro = logradouro; }
+
+    public Long getUsuarioId() { return usuarioId; }
+    public void setUsuarioId(Long usuarioId) { this.usuarioId = usuarioId; }
 }

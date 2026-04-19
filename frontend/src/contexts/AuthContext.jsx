@@ -5,123 +5,120 @@ const AuthContext = createContext();
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth deve ser usado dentro de AuthProvider');
-  }
+  if (!context) throw new Error('useAuth deve ser usado dentro de AuthProvider');
   return context;
 };
 
 export const AuthProvider = ({ children }) => {
   const [usuario, setUsuario] = useState(() => {
-    // Sempre verificar localStorage primeiro para manter login entre abas
-    const savedLocal = localStorage.getItem('usuario_logado');
-    if (savedLocal) return JSON.parse(savedLocal);
-    
-    const savedSession = sessionStorage.getItem('usuario_logado');
-    return savedSession ? JSON.parse(savedSession) : null;
+    try {
+      const saved = localStorage.getItem('usuario_logado');
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      localStorage.removeItem('usuario_logado');
+      return null;
+    }
   });
   const [mostrarMensagemLogout, setMostrarMensagemLogout] = useState(false);
 
-  const salvarUsuario = (dadosUsuario, lembrar = false) => {
-    // Sempre salvar no localStorage para manter entre abas
-    localStorage.setItem('usuario_logado', JSON.stringify(dadosUsuario));
-    
-    if (!lembrar) {
-      // Se não marcou "lembrar", também salvar no sessionStorage como indicador
-      sessionStorage.setItem('usuario_temporario', 'true');
-    } else {
-      sessionStorage.removeItem('usuario_temporario');
+  useEffect(() => {
+    if (usuario && usuario.tipo === 'usuario' && !usuario.pontoVinculado) {
+      apiService.listarMeusPontos().catch(() => []).then(meusPontos => {
+        const pontoAtivo = meusPontos.find(p => p.statusPonto === 'ATIVO') || null;
+        if (pontoAtivo) setUsuario(prev => ({ ...prev, pontoVinculado: pontoAtivo }));
+      });
     }
-  };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
-    if (!usuario) {
+    if (usuario) {
+      localStorage.setItem('usuario_logado', JSON.stringify(usuario));
+    } else {
       localStorage.removeItem('usuario_logado');
-      sessionStorage.removeItem('usuario_logado');
     }
   }, [usuario]);
 
   useEffect(() => {
     const handleStorageChange = () => {
-      const savedLocal = localStorage.getItem('usuario_logado');
-      const savedSession = sessionStorage.getItem('usuario_logado');
-      const savedUser = savedLocal ? JSON.parse(savedLocal) : (savedSession ? JSON.parse(savedSession) : null);
-      
-      if (savedUser && (!usuario || JSON.stringify(usuario) !== JSON.stringify(savedUser))) {
-        setUsuario(savedUser);
-      } else if (!savedUser && usuario) {
+      try {
+        const saved = localStorage.getItem('usuario_logado');
+        const savedUser = saved ? JSON.parse(saved) : null;
+        if (JSON.stringify(savedUser) !== JSON.stringify(usuario)) {
+          setUsuario(savedUser);
+        }
+      } catch {
+        localStorage.removeItem('usuario_logado');
         setUsuario(null);
       }
     };
-
     window.addEventListener('storage', handleStorageChange);
-    window.addEventListener('focus', handleStorageChange);
-    
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('focus', handleStorageChange);
-    };
+    return () => window.removeEventListener('storage', handleStorageChange);
   }, [usuario]);
 
-  const loginPonto = (dadosPonto, lembrar = false) => {
-    const usuario = { tipo: 'ponto', dados: dadosPonto };
-    setUsuario(usuario);
-    salvarUsuario(usuario, lembrar);
-  };
-
-  const loginAdmin = (lembrar = false) => {
-    const usuario = { tipo: 'admin', dados: { email: 'vitorhugobate@gmail.com', nome: 'Administrador VerDenovo' } };
-    setUsuario(usuario);
-    salvarUsuario(usuario, lembrar);
-  };
-
-  const loginUsuario = async (email, senha, lembrar = false) => {
-    try {
-      const response = await apiService.login(email, senha);
-      const usuario = { tipo: 'usuario', dados: response.usuario };
-      setUsuario(usuario);
-      salvarUsuario(usuario, lembrar);
-      return response;
-    } catch (error) {
-      throw new Error('Credenciais inválidas');
+  const loginAdmin = async (email, senha) => {
+    const response = await apiService.login(email, senha);
+    if (response.usuario?.nivelAcesso !== 'ADMIN') {
+      apiService.logout(); // limpa o token que foi salvo
+      throw new Error('Acesso negado. Conta sem permissão de administrador.');
     }
+    setUsuario({ tipo: 'admin', dados: response.usuario });
+    return response;
+  };
+
+  const loginUsuario = async (email, senha) => {
+    const response = await apiService.login(email, senha);
+    let pontoAtivo = null;
+    if (response.usuario?.nivelAcesso !== 'ADMIN') {
+      const meusPontos = await apiService.listarMeusPontos().catch(() => []);
+      pontoAtivo = meusPontos.find(p => p.statusPonto === 'ATIVO') || null;
+      if (!pontoAtivo) {
+        const todosPontos = await apiService.listarPontos().catch(() => []);
+        pontoAtivo = todosPontos.find(p => p.email === response.usuario.email && p.statusPonto === 'ATIVO') || null;
+      }
+    }
+    setUsuario({ tipo: 'usuario', dados: response.usuario, pontoVinculado: pontoAtivo });
+    return response;
   };
 
   const cadastrarUsuario = async (dadosUsuario) => {
-    try {
-      await apiService.cadastrar(dadosUsuario);
-      return { success: true };
-    } catch (error) {
-      throw new Error('Erro ao cadastrar usuário');
-    }
+    await apiService.cadastrar(dadosUsuario);
+    return { success: true };
   };
 
   const logout = () => {
     apiService.logout();
     setUsuario(null);
-    localStorage.removeItem('usuario_logado');
-    sessionStorage.removeItem('usuario_logado');
-    sessionStorage.removeItem('usuario_temporario');
     setMostrarMensagemLogout(true);
     setTimeout(() => setMostrarMensagemLogout(false), 3000);
     window.location.href = '/';
-    setTimeout(() => window.location.reload(), 100);
   };
 
-  const isLogado = () => {
-    return usuario !== null;
+  const atualizarPontoVinculado = async () => {
+    if (!usuario || usuario.tipo !== 'usuario') return;
+    const [meusPontos, todosPontos] = await Promise.all([
+      apiService.listarMeusPontos().catch(() => []),
+      apiService.listarPontos().catch(() => [])
+    ]);
+    const pontoAtivo =
+      meusPontos.find(p => p.statusPonto === 'ATIVO') ||
+      todosPontos.find(p => p.email === usuario.dados?.email && p.statusPonto === 'ATIVO') ||
+      null;
+    setUsuario(prev => ({ ...prev, pontoVinculado: pontoAtivo }));
   };
+
+  const isLogado = () => usuario !== null;
 
   return (
     <AuthContext.Provider value={{
       usuario,
-      loginPonto,
       loginAdmin,
       loginUsuario,
       cadastrarUsuario,
       logout,
       isLogado,
-      mostrarMensagemLogout
+      mostrarMensagemLogout,
+      atualizarPontoVinculado,
     }}>
       {children}
     </AuthContext.Provider>

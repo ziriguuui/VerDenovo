@@ -15,10 +15,10 @@ function Footer() {
               </div>
               <p className="text-light mb-3">Transformando o futuro através da reciclagem inteligente. Conectamos pessoas, empresas e pontos de coleta para um mundo mais sustentável.</p>
               <div className="d-flex gap-3">
-                <a href="#" className="text-white fs-5"><i className="bi bi-facebook"></i></a>
-                <a href="#" className="text-white fs-5"><i className="bi bi-instagram"></i></a>
-                <a href="#" className="text-white fs-5"><i className="bi bi-linkedin"></i></a>
-                <a href="#" className="text-white fs-5"><i className="bi bi-twitter"></i></a>
+                <a href="https://facebook.com" target="_blank" rel="noreferrer" className="text-white fs-5"><i className="bi bi-facebook"></i></a>
+                <a href="https://instagram.com" target="_blank" rel="noreferrer" className="text-white fs-5"><i className="bi bi-instagram"></i></a>
+                <a href="https://linkedin.com" target="_blank" rel="noreferrer" className="text-white fs-5"><i className="bi bi-linkedin"></i></a>
+                <a href="https://twitter.com" target="_blank" rel="noreferrer" className="text-white fs-5"><i className="bi bi-twitter"></i></a>
               </div>
             </div>
             
@@ -79,7 +79,7 @@ function Footer() {
         </div>
       </div>
       
-      <style jsx>{`
+      <style>{`
         .hover-link:hover {
           color: #28a745 !important;
           transition: color 0.3s ease;

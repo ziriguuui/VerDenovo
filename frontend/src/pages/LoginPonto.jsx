@@ -6,13 +6,10 @@ import { useAuth } from '../contexts/AuthContext';
 function LoginPonto() {
   const navigate = useNavigate();
   const { loginPonto } = useAuth();
-  const [formData, setFormData] = useState({
-    email: '',
-    senha: ''
-  });
+  const [formData, setFormData] = useState({ email: '', senha: '' });
   const [mostrarSenha, setMostrarSenha] = useState(false);
-  const [lembrarMe, setLembrarMe] = useState(false);
   const [carregando, setCarregando] = useState(false);
+  const [erro, setErro] = useState('');
 
   const styles = `
     .login-ponto-container {
@@ -92,23 +89,19 @@ function LoginPonto() {
   `;
 
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
+    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setCarregando(true);
-    
+    setErro('');
     try {
       const response = await apiService.loginPonto(formData.email, formData.senha);
-      // Usar o AuthContext para fazer login
-      loginPonto(response.ponto, lembrarMe);
+      loginPonto(response.ponto);
       navigate('/personalizar-ponto');
     } catch (error) {
-      alert('Email ou senha incorretos!');
+      setErro(error.message || 'Email ou senha incorretos.');
     } finally {
       setCarregando(false);
     }
@@ -125,8 +118,14 @@ function LoginPonto() {
           <h3 className="text-white mb-0 fw-bold">Acesso ao Sistema</h3>
           <p className="text-white-50 mb-0 mt-2">Entre com suas credenciais</p>
         </div>
-        
+
         <div className="p-4">
+          {erro && (
+            <div className="alert alert-danger border-0 rounded-3 mb-4" role="alert">
+              <i className="bi bi-exclamation-triangle me-2"></i>{erro}
+            </div>
+          )}
+
           <form onSubmit={handleSubmit}>
             <div className="form-floating mb-3">
               <input
@@ -144,7 +143,7 @@ function LoginPonto() {
                 <i className="bi bi-envelope me-2"></i>Email
               </label>
             </div>
-            
+
             <div className="form-floating position-relative mb-4">
               <input
                 type={mostrarSenha ? 'text' : 'password'}
@@ -168,27 +167,9 @@ function LoginPonto() {
                 <i className={`bi ${mostrarSenha ? 'bi-eye-slash' : 'bi-eye'}`}></i>
               </button>
             </div>
-            
-            <div className="form-check mb-4">
-              <input
-                className="form-check-input"
-                type="checkbox"
-                id="lembrarMePonto"
-                checked={lembrarMe}
-                onChange={(e) => setLembrarMe(e.target.checked)}
-              />
-              <label className="form-check-label text-muted" htmlFor="lembrarMePonto">
-                <i className="bi bi-bookmark-check me-2"></i>
-                Lembrar de mim
-              </label>
-            </div>
-            
+
             <div className="d-grid mb-4">
-              <button 
-                type="submit" 
-                className="btn btn-login-ponto text-white"
-                disabled={carregando}
-              >
+              <button type="submit" className="btn btn-login-ponto text-white" disabled={carregando}>
                 {carregando ? (
                   <>
                     <span className="spinner-border spinner-border-sm me-2" role="status"></span>
@@ -203,15 +184,13 @@ function LoginPonto() {
               </button>
             </div>
           </form>
-          
-          <div className="text-center mb-4">
+
+          <div className="text-center">
             <Link to="/recuperar-senha-ponto" className="text-decoration-none text-success fw-medium">
               <i className="bi bi-question-circle me-1"></i>
               Esqueceu a senha?
             </Link>
           </div>
-          
-
         </div>
       </div>
     </div>

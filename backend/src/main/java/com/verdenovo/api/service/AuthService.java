@@ -24,24 +24,17 @@ public class AuthService {
     private JwtUtil jwtUtil;
 
     public LoginResponse login(LoginRequest request) {
-        System.out.println("Searching for user: " + request.getEmail());
         Usuario usuario = usuarioRepository.findByEmailAndStatusUsuario(request.getEmail(), "ATIVO")
-            .orElseThrow(() -> new RuntimeException("Usuário não encontrado ou inativo"));
-        
-        System.out.println("User found: " + usuario.getNome());
-        System.out.println("Password check for: " + request.getEmail());
+            .orElseThrow(() -> new RuntimeException("Credenciais inválidas"));
         
         if (!passwordEncoder.matches(request.getSenha(), usuario.getSenha())) {
-            System.out.println("Password mismatch for: " + request.getEmail());
-            throw new RuntimeException("Senha incorreta");
+            throw new RuntimeException("Credenciais inválidas");
         }
         
-        System.out.println("Login successful for: " + request.getEmail());
-        
         String token = jwtUtil.generateToken(usuario.getEmail());
-        
         return new LoginResponse(token, new UsuarioResponse(
-            usuario.getId(), usuario.getNome(), usuario.getEmail(), usuario.getNivelAcesso()));
+            usuario.getId(), usuario.getNome(), usuario.getEmail(),
+            usuario.getNivelAcesso(), usuario.getStatusUsuario()));
     }
 
     public void cadastrar(Usuario usuario) {
@@ -52,15 +45,16 @@ public class AuthService {
         usuario.setSenha(passwordEncoder.encode(usuario.getSenha()));
         usuario.setDataCadastro(LocalDateTime.now());
         usuario.setStatusUsuario("ATIVO");
-        if (usuario.getNivelAcesso() == null) {
-            usuario.setNivelAcesso("USER");
-        }
+        usuario.setNivelAcesso("USER");
         
         usuarioRepository.save(usuario);
     }
     
-    public java.util.List<Usuario> listarUsuarios() {
-        return usuarioRepository.findAll();
+    public java.util.List<UsuarioResponse> listarUsuarios() {
+        return usuarioRepository.findAll().stream()
+            .map(u -> new UsuarioResponse(u.getId(), u.getNome(), u.getEmail(),
+                u.getNivelAcesso(), u.getStatusUsuario()))
+            .collect(java.util.stream.Collectors.toList());
     }
     
     public void alterarStatusUsuario(Long id) {

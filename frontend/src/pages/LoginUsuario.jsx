@@ -8,8 +8,7 @@ function LoginUsuario() {
   const [erro, setErro] = useState('');
   const [carregando, setCarregando] = useState(false);
   const [mostrarSenha, setMostrarSenha] = useState(false);
-  const [lembrarMe, setLembrarMe] = useState(false);
-  const { loginUsuario, loginAdmin } = useAuth();
+  const { loginUsuario } = useAuth();
   const navigate = useNavigate();
 
   const styles = `
@@ -93,18 +92,9 @@ function LoginUsuario() {
     e.preventDefault();
     setCarregando(true);
     setErro('');
-
     try {
-      // Verificar se é admin
-      if (email === 'admin@verdenovo.com' && senha === 'admin123') {
-        loginAdmin(lembrarMe);
-        navigate('/');
-      } else if (email && senha) {
-        await loginUsuario(email, senha, lembrarMe);
-        navigate('/');
-      } else {
-        setErro('Email e senha são obrigatórios');
-      }
+      await loginUsuario(email, senha);
+      navigate('/');
     } catch (error) {
       setErro(error.message || 'Erro ao fazer login. Verifique suas credenciais.');
     } finally {
@@ -171,20 +161,7 @@ function LoginUsuario() {
                 <i className={`bi ${mostrarSenha ? 'bi-eye-slash' : 'bi-eye'}`}></i>
               </button>
             </div>
-            
-            <div className="form-check mb-4">
-              <input
-                className="form-check-input"
-                type="checkbox"
-                id="lembrarMe"
-                checked={lembrarMe}
-                onChange={(e) => setLembrarMe(e.target.checked)}
-              />
-              <label className="form-check-label text-muted" htmlFor="lembrarMe">
-                <i className="bi bi-bookmark-check me-2"></i>
-                Lembrar de mim
-              </label>
-            </div>
+
             
             <div className="d-grid mb-4">
               <button 

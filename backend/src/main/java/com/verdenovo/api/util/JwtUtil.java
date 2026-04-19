@@ -4,8 +4,10 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import java.nio.charset.StandardCharsets;
 import javax.crypto.SecretKey;
 import java.util.Base64;
 import java.util.Date;
@@ -15,12 +17,15 @@ import java.util.function.Function;
 
 @Component
 public class JwtUtil {
-    
-    private final String SECRET = "myVerySecureSecretKeyForJWTTokenGeneration123456789";
-    private final int JWT_TOKEN_VALIDITY = 5 * 60 * 60; // 5 horas
-    
+
+    @Value("${jwt.secret}")
+    private String SECRET;
+
+    @Value("${jwt.expiration}")
+    private long JWT_TOKEN_VALIDITY;
+
     private SecretKey getSigningKey() {
-        byte[] keyBytes = Base64.getEncoder().encode(SECRET.getBytes());
+        byte[] keyBytes = Base64.getEncoder().encode(SECRET.getBytes(StandardCharsets.UTF_8));
         return Keys.hmacShaKeyFor(keyBytes);
     }
     

@@ -51,10 +51,8 @@ class NoticiasService {
   // Atualiza notícias se necessário
   async atualizarNoticias() {
     if (this.precisaAtualizar()) {
-      console.log('Atualizando notícias...');
       this.noticias = await this.buscarNoticias();
       this.ultimaAtualizacao = new Date().toISOString();
-      
       localStorage.setItem('noticias', JSON.stringify(this.noticias));
       localStorage.setItem('ultimaAtualizacaoNoticias', this.ultimaAtualizacao);
     }

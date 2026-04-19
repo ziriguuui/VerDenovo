@@ -1,69 +1,33 @@
 import { Link } from 'react-router-dom';
-import { useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 
 function Home() {
-  const { mostrarMensagemLogout } = useAuth();
-  
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, []);
-  const animationStyles = `
-    @keyframes fadeInUp {
-      from { opacity: 0; transform: translateY(40px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    @keyframes slideInLeft {
-      from { opacity: 0; transform: translateX(-60px); }
-      to { opacity: 1; transform: translateX(0); }
-    }
-    @keyframes slideInRight {
-      from { opacity: 0; transform: translateX(60px); }
-      to { opacity: 1; transform: translateX(0); }
-    }
-    @keyframes scaleIn {
-      from { opacity: 0; transform: scale(0.8); }
-      to { opacity: 1; transform: scale(1); }
-    }
-    @keyframes pulse {
-      0%, 100% { transform: scale(1); }
-      50% { transform: scale(1.08); }
-    }
-    @keyframes bounce {
-      0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
-      40% { transform: translateY(-10px); }
-      60% { transform: translateY(-5px); }
-    }
-    @keyframes glow {
-      0%, 100% { box-shadow: 0 0 5px rgba(5, 150, 105, 0.3); }
-      50% { box-shadow: 0 0 20px rgba(5, 150, 105, 0.6), 0 0 30px rgba(5, 150, 105, 0.4); }
-    }
-    .animate-fadeInUp { animation: fadeInUp 1s cubic-bezier(0.25, 0.46, 0.45, 0.94); }
-    .animate-slideInLeft { animation: slideInLeft 1s cubic-bezier(0.25, 0.46, 0.45, 0.94); }
-    .animate-slideInRight { animation: slideInRight 1s cubic-bezier(0.25, 0.46, 0.45, 0.94); }
-    .animate-scaleIn { animation: scaleIn 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94); }
-    .animate-delay-1 { animation-delay: 0.2s; animation-fill-mode: both; }
-    .animate-delay-2 { animation-delay: 0.4s; animation-fill-mode: both; }
-    .animate-delay-3 { animation-delay: 0.6s; animation-fill-mode: both; }
-    .animate-delay-4 { animation-delay: 0.8s; animation-fill-mode: both; }
-    .pulse { animation: pulse 3s ease-in-out infinite; }
-    .bounce { animation: bounce 2s infinite; }
-    .glow { animation: glow 2s ease-in-out infinite; }
-    .hover-lift { transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94); }
-    .hover-lift:hover { transform: translateY(-12px) scale(1.03); box-shadow: 0 30px 60px rgba(0,0,0,0.2) !important; }
-    .hover-scale { transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94); }
-    .hover-scale:hover { transform: scale(1.05); }
-    @keyframes float {
-      0%, 100% { transform: translateY(0px) rotate(0deg); }
-      33% { transform: translateY(-15px) rotate(1deg); }
-      66% { transform: translateY(-8px) rotate(-1deg); }
-    }
-    .float { animation: float 6s ease-in-out infinite; }
-    .btn-success:hover { transform: translateY(-4px) scale(1.02); box-shadow: 0 15px 40px rgba(5, 150, 105, 0.5) !important; }
-    .btn-outline-success:hover { transform: translateY(-4px) scale(1.02); background: #059669; border-color: #059669; color: white; box-shadow: 0 15px 40px rgba(5, 150, 105, 0.3); }
-    .hover-scale:hover { transform: perspective(1000px) rotateY(0deg) scale(1.03) !important; }
-  `;
+  const { mostrarMensagemLogout, usuario, isLogado } = useAuth();
 
+  const botaoSecundario = () => {
+    if (!isLogado()) {
+      return (
+        <Link to="/cadastro-usuario" className="btn btn-outline-success btn-lg px-5 py-3" style={{borderRadius: '12px', fontWeight: '600', borderWidth: '2px', transition: 'all 0.3s ease'}}>
+          <i className="bi bi-person-plus me-2"></i>Criar Conta
+        </Link>
+      );
+    }
+    if (usuario?.pontoVinculado) {
+      return (
+        <Link to="/personalizar-ponto" className="btn btn-outline-success btn-lg px-5 py-3" style={{borderRadius: '12px', fontWeight: '600', borderWidth: '2px', transition: 'all 0.3s ease'}}>
+          <i className="bi bi-gear me-2"></i>Gerenciar Meu Ponto
+        </Link>
+      );
+    }
+    if (usuario?.tipo === 'usuario') {
+      return (
+        <Link to="/cadastrar" className="btn btn-outline-success btn-lg px-5 py-3" style={{borderRadius: '12px', fontWeight: '600', borderWidth: '2px', transition: 'all 0.3s ease'}}>
+          <i className="bi bi-plus-circle me-2"></i>Cadastrar Ponto
+        </Link>
+      );
+    }
+    return null;
+  };
   return (
     <div>
       {/* Mensagem de Logout */}
@@ -90,8 +54,6 @@ function Home() {
         </div>
       )}
       
-      <style>{animationStyles}</style>
-      {/* Hero Section */}
       <div className="hero-section mb-5 position-relative overflow-hidden" style={{minHeight: '70vh', background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 50%, #cbd5e1 100%)', borderRadius: '25px', padding: '4rem 2rem'}}>
         <div className="position-absolute" style={{top: '15%', right: '10%', width: '80px', height: '80px', background: 'rgba(5, 150, 105, 0.1)', borderRadius: '50%', animation: 'float 6s ease-in-out infinite'}}></div>
         <div className="position-absolute" style={{bottom: '20%', left: '5%', width: '60px', height: '60px', background: 'rgba(16, 185, 129, 0.1)', borderRadius: '50%', animation: 'float 4s ease-in-out infinite reverse'}}></div>
@@ -111,9 +73,7 @@ function Home() {
               <Link to="/pontos" className="btn btn-success btn-lg px-5 py-3 position-relative" style={{borderRadius: '12px', fontWeight: '600', border: 'none', boxShadow: '0 8px 25px rgba(5, 150, 105, 0.25)', transition: 'all 0.3s ease'}}>
                 <i className="bi bi-geo-alt me-2"></i>Encontrar Pontos
               </Link>
-              <Link to="/cadastrar" className="btn btn-outline-success btn-lg px-5 py-3" style={{borderRadius: '12px', fontWeight: '600', borderWidth: '2px', transition: 'all 0.3s ease'}}>
-                <i className="bi bi-plus-circle me-2"></i>Cadastrar Ponto
-              </Link>
+              {botaoSecundario()}
             </div>
           </div>
           <div className="col-lg-6 animate-slideInRight">
@@ -150,7 +110,7 @@ function Home() {
             </div>
           </div>
           <div className="carousel-item">
-            <img src="https://images.unsplash.com/photo-1542838132-92c53300491e?w=1200&h=400&fit=crop" className="d-block w-100" alt="Futuro Verde" style={{height: '400px', objectFit: 'cover'}} />
+            <img src="/natureza2.jpg" className="d-block w-100" alt="Futuro Verde" style={{height: '400px', objectFit: 'cover'}} />
             <div className="carousel-caption d-none d-md-block">
               <h5 className="text-white">Futuro Verde</h5>
               <p className="text-white">Construindo um amanhã mais limpo e sustentável</p>

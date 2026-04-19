@@ -1,345 +1,346 @@
 import { useForm } from 'react-hook-form';
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { apiService } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 
-function CadastrarPonto() {
-  const { register, handleSubmit, reset, formState: { errors } } = useForm();
-  const [loading, setLoading] = useState(false);
-  const [mensagem, setMensagem] = useState('');
-  const navigate = useNavigate();
-  
-  const styles = `
-    .cadastro-ponto-container {
-      min-height: 100vh;
-      background: #f8fffe;
-      padding: 100px 20px 20px 20px;
+async function buscarCep(cep, setValue) {
+  const cepLimpo = cep.replace(/\D/g, '');
+  if (cepLimpo.length !== 8 || !/^\d{8}$/.test(cepLimpo)) return;
+  try {
+    const url = `https://viacep.com.br/ws/${cepLimpo}/json/`;
+    const res = await fetch(url, { method: 'GET' });
+    if (!res.ok) return;
+    const data = await res.json();
+    if (data && !data.erro && typeof data.logradouro === 'string') {
+      setValue('logradouro', `${data.logradouro}, ${data.bairro || ''} - ${data.localidade || ''}/${data.uf || ''}`.trim());
     }
-    .cadastro-ponto-card {
-      background: rgba(255, 255, 255, 0.95);
-      backdrop-filter: blur(10px);
-      border-radius: 20px;
-      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      overflow: hidden;
-      max-width: 800px;
-      margin: 0 auto;
-    }
-    .cadastro-ponto-header {
-      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-      padding: 2rem;
-      text-align: center;
-    }
-    .ponto-icon {
-      width: 80px;
-      height: 80px;
-      background: rgba(255, 255, 255, 0.2);
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin: 0 auto 1rem;
-      font-size: 2rem;
-    }
-    .form-floating input {
-      border: 2px solid #e5e7eb;
-      border-radius: 12px;
-      padding: 1rem;
-      transition: all 0.3s ease;
-      background: #f9fafb;
-    }
-    .form-floating input:focus {
-      border-color: #10b981;
-      box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
-      background: white;
-    }
-    .btn-cadastro-ponto {
-      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-      border: none;
-      border-radius: 12px;
-      padding: 1rem;
-      font-weight: 600;
-      transition: all 0.3s ease;
-    }
-    .btn-cadastro-ponto:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 10px 25px rgba(16, 185, 129, 0.3);
-    }
-    .material-checkbox {
-      background: #f9fafb;
-      border: 2px solid #e5e7eb;
-      border-radius: 12px;
-      padding: 1rem;
-      transition: all 0.3s ease;
-    }
-    .material-checkbox:hover {
-      border-color: #10b981;
-      background: white;
-    }
-    @keyframes slideInUp {
-      from { opacity: 0; transform: translateY(30px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    @keyframes bounce {
-      0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
-      40% { transform: translateY(-10px); }
-      60% { transform: translateY(-5px); }
-    }
-    .animate-slide-up { animation: slideInUp 0.6s ease-out; }
-  `;
+  } catch { }
+}
 
+const inputStyle = { border: '2px solid #e5e7eb', borderRadius: '12px', background: '#f9fafb' };
+
+function CadastrarPonto() {
+  const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm();
+  const [loading, setLoading] = useState(false);
+  const [erro, setErro] = useState('');
+  const [sucesso, setSucesso] = useState(false);
+  const [jaTemPonto, setJaTemPonto] = useState(false);
+  const [pontoPendente, setPontoPendente] = useState(false);
+  const [verificando, setVerificando] = useState(true);
   const { usuario } = useAuth();
+
+  useEffect(() => {
+    // Admin nunca precisa verificar limite de pontos
+    if (usuario?.dados?.nivelAcesso === 'ADMIN') {
+      setJaTemPonto(false);
+      setVerificando(false);
+      return;
+    }
+    // Sem usuario ainda carregado, aguarda
+    if (!usuario) {
+      setVerificando(false);
+      return;
+    }
+    // Sempre busca do banco para garantir estado atualizado
+    apiService.listarMeusPontos()
+      .then(pontos => {
+        const temAtivo = pontos.some(p => p.statusPonto === 'ATIVO' || p.statusPonto === 'PENDENTE');
+        const isPendente = pontos.some(p => p.statusPonto === 'PENDENTE');
+        setJaTemPonto(temAtivo);
+        setPontoPendente(isPendente);
+      })
+      .catch(() => setJaTemPonto(false))
+      .finally(() => setVerificando(false));
+  }, [usuario]);
 
   const onSubmit = async (dados) => {
     setLoading(true);
-    setMensagem('');
-    
+    setErro('');
+
+    const materiais = [];
+    if (dados.materiais?.papel) materiais.push('Papel');
+    if (dados.materiais?.plastico) materiais.push('Plástico');
+    if (dados.materiais?.vidro) materiais.push('Vidro');
+    if (dados.materiais?.metal) materiais.push('Metal');
+    if (dados.materiais?.eletronico) materiais.push('Eletrônico');
+    if (dados.materiais?.organico) materiais.push('Orgânico');
+
+    if (materiais.length === 0) {
+      setErro('Selecione pelo menos um tipo de material.');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      setLoading(false);
+      return;
+    }
+
     try {
-      // Formatar materiais
-      const materiais = [];
-      if (dados.materiais?.papel) materiais.push('Papel');
-      if (dados.materiais?.plastico) materiais.push('Plástico');
-      if (dados.materiais?.vidro) materiais.push('Vidro');
-      if (dados.materiais?.metal) materiais.push('Metal');
-      
-      const pontoData = {
+      await apiService.criarPonto({
         nome: dados.nome,
         cep: dados.cep.replace(/\D/g, ''),
         numero: dados.numero,
         complemento: dados.complemento || '',
+        logradouro: dados.logradouro || '',
         telefone: dados.telefone || '',
-        email: dados.email || '',
+        email: usuario?.dados?.nivelAcesso === 'ADMIN'
+          ? (dados.emailPonto || '')
+          : (usuario?.dados?.email || ''),
         horaFuncionamento: dados.horaFuncionamento,
-        material: materiais.join(', ') || 'Não especificado',
-        senha: dados.senha
-      };
-      
-      await apiService.criarPonto(pontoData);
-      
-      setMensagem('Ponto cadastrado com sucesso!');
+        material: materiais.join(', '),
+        descricao: dados.descricao || '',
+        senha: dados.senha || null,
+      });
+      setSucesso(true);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
       reset();
-      
-      // Redirecionar para login de ponto após 2 segundos
-      setTimeout(() => {
-        navigate('/login-ponto');
-      }, 2000);
     } catch (error) {
-      console.error('Erro:', error);
-      setMensagem('Erro ao cadastrar ponto: ' + error.message);
+      setErro(error.message);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     } finally {
       setLoading(false);
     }
   };
 
+  if (verificando) {
+    return (
+      <div style={{minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+        <div className="text-center">
+          <div className="spinner-border text-success mb-3"></div>
+          <p className="text-muted">Verificando...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (jaTemPonto) {
+    return (
+      <div style={{minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem'}}>
+        <div className="text-center animate-fadeInUp" style={{maxWidth: '500px'}}>
+          <div className="d-inline-flex align-items-center justify-content-center mb-4" style={{
+            width: '100px', height: '100px',
+            background: 'linear-gradient(135deg, #10b981, #059669)',
+            borderRadius: '50%', boxShadow: '0 15px 40px rgba(16,185,129,0.3)'
+          }}>
+            <i className="bi bi-geo-alt-fill text-white" style={{fontSize: '2.5rem'}}></i>
+          </div>
+          <h2 className="fw-bold text-success mb-3">
+            {pontoPendente ? 'Ponto em análise!' : 'Você já tem um ponto!'}
+          </h2>
+          <p className="text-muted mb-4">
+            {pontoPendente
+              ? 'Seu ponto está aguardando aprovação de um administrador. Após a aprovação, ele aparecerá na lista de pontos de coleta.'
+              : 'Cada usuário pode cadastrar apenas um ponto de coleta. Gerencie as informações do seu ponto existente.'}
+          </p>
+          {!pontoPendente && (
+            <Link to="/personalizar-ponto" className="btn btn-success px-5 py-3" style={{borderRadius: '12px', fontWeight: '600'}}>
+              <i className="bi bi-gear me-2"></i>Gerenciar Meu Ponto
+            </Link>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  if (sucesso) {
+    return (
+      <div style={{minHeight: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem'}}>
+        <div className="text-center animate-fadeInUp" style={{maxWidth: '500px'}}>
+          <div className="d-inline-flex align-items-center justify-content-center mb-4" style={{
+            width: '100px', height: '100px',
+            background: 'linear-gradient(135deg, #10b981, #059669)',
+            borderRadius: '50%', boxShadow: '0 15px 40px rgba(16,185,129,0.3)'
+          }}>
+            <i className="bi bi-hourglass-split text-white" style={{fontSize: '2.5rem'}}></i>
+          </div>
+          <h2 className="fw-bold text-success mb-3">
+            {usuario?.dados?.nivelAcesso === 'ADMIN' ? 'Ponto cadastrado!' : 'Ponto enviado para análise!'}
+          </h2>
+          <p className="text-muted mb-2">
+            {usuario?.dados?.nivelAcesso === 'ADMIN'
+              ? 'O ponto foi cadastrado e já está ativo no site.'
+              : <>Seu ponto de coleta foi cadastrado com sucesso e está <strong>aguardando aprovação</strong> de um administrador.</>}
+          </p>
+          <p className="text-muted mb-4" style={{fontSize: '0.9rem'}}>
+            Após a aprovação, ele aparecerá na lista de pontos de coleta do site.
+          </p>
+          <div className="d-flex gap-3 justify-content-center flex-wrap">
+            <Link to="/pontos" className="btn btn-outline-success px-4" style={{borderRadius: '12px'}}>
+              <i className="bi bi-geo-alt me-2"></i>Ver pontos ativos
+            </Link>
+            {usuario?.dados?.nivelAcesso === 'ADMIN' && (
+              <Link to="/personalizar-ponto" className="btn btn-success px-4" style={{borderRadius: '12px'}}>
+                <i className="bi bi-gear me-2"></i>Gerenciar Meu Ponto
+              </Link>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="cadastro-ponto-container">
-      <style>{styles}</style>
-      <div className="cadastro-ponto-card animate-slide-up">
-        <div className="cadastro-ponto-header">
-          <div className="ponto-icon">
+    <div style={{minHeight: '100vh', background: '#f8fffe', padding: '2rem 0'}}>
+      <div style={{background: 'rgba(255,255,255,0.95)', borderRadius: '20px', boxShadow: '0 20px 40px rgba(0,0,0,0.1)', overflow: 'hidden', maxWidth: '800px', margin: '0 auto'}}>
+
+        <div style={{background: 'linear-gradient(135deg, #10b981, #059669)', padding: '2rem', textAlign: 'center'}}>
+          <div style={{width: '80px', height: '80px', background: 'rgba(255,255,255,0.2)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem', fontSize: '2rem'}}>
             <i className="bi bi-geo-alt text-white"></i>
           </div>
           <h3 className="text-white mb-0 fw-bold">Cadastrar Ponto de Coleta</h3>
-          <p className="text-white-50 mb-0 mt-2">Registre um novo ponto de coleta</p>
+          <p className="text-white-50 mb-0 mt-2">Preencha os dados do ponto — ele será analisado antes de aparecer no site</p>
         </div>
-        
+
         <div className="p-4">
-          {mensagem && (
-            <div className={`alert border-0 rounded-3 mb-4 ${mensagem.includes('sucesso') ? 'alert-success' : 'alert-danger'}`}>
-              <i className={`bi ${mensagem.includes('sucesso') ? 'bi-check-circle' : 'bi-exclamation-triangle'} me-2`}></i>
-              {mensagem}
+          {usuario?.dados?.nivelAcesso === 'ADMIN' ? (
+            <div className="alert alert-success border-0 rounded-3 mb-4">
+              <i className="bi bi-shield-check me-2"></i>
+              Ponto criado pelo administrador será ativado imediatamente.
+            </div>
+          ) : (
+            <div className="alert alert-info border-0 rounded-3 mb-4">
+              <i className="bi bi-info-circle me-2"></i>
+              Após o cadastro, um administrador irá revisar e aprovar o ponto antes de ele aparecer publicamente.
             </div>
           )}
 
-          <form onSubmit={handleSubmit(onSubmit)}>
+          {erro && (
+            <div className="alert alert-danger border-0 rounded-3 mb-4">
+              <i className="bi bi-exclamation-triangle me-2"></i>{erro}
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit(onSubmit, () => window.scrollTo({ top: 0, behavior: 'smooth' }))}>
+
+            {/* Nome */}
             <div className="form-floating mb-3">
-              <input
-                type="text"
-                className={`form-control ${errors.nome ? 'is-invalid' : ''}`}
-                id="nome"
-                placeholder="Nome do ponto"
-                maxLength="50"
-                {...register('nome', { required: 'Nome é obrigatório' })}
-              />
-              <label htmlFor="nome">
-                <i className="bi bi-geo-alt me-2"></i>Nome do Ponto
-              </label>
+              <input type="text" className={`form-control ${errors.nome ? 'is-invalid' : ''}`}
+                id="nome" placeholder="Nome do ponto" maxLength="50" style={inputStyle}
+                {...register('nome', { required: 'Nome é obrigatório' })} />
+              <label htmlFor="nome"><i className="bi bi-geo-alt me-2"></i>Nome do Ponto</label>
               {errors.nome && <div className="invalid-feedback">{errors.nome.message}</div>}
             </div>
 
-            <div className="form-floating mb-3">
-              <input
-                type="text"
-                className={`form-control ${errors.numero ? 'is-invalid' : ''}`}
-                id="numero"
-                placeholder="Número"
-                maxLength="10"
-                {...register('numero', { required: 'Número é obrigatório' })}
-              />
-              <label htmlFor="numero">
-                <i className="bi bi-hash me-2"></i>Número
-              </label>
-              {errors.numero && <div className="invalid-feedback">{errors.numero.message}</div>}
-            </div>
-
-            <div className="form-floating mb-3">
-              <input
-                type="text"
-                className="form-control"
-                id="complemento"
-                placeholder="Complemento (opcional)"
-                maxLength="50"
-                {...register('complemento')}
-              />
-              <label htmlFor="complemento">
-                <i className="bi bi-house me-2"></i>Complemento
-              </label>
-            </div>
-
-            <div className="form-floating mb-3">
-              <input
-                type="text"
-                className={`form-control ${errors.cep ? 'is-invalid' : ''}`}
-                id="cep"
-                placeholder="00000-000"
-                maxLength="9"
-                {...register('cep', { required: 'CEP é obrigatório' })}
-              />
-              <label htmlFor="cep">
-                <i className="bi bi-mailbox me-2"></i>CEP
-              </label>
-              {errors.cep && <div className="invalid-feedback">{errors.cep.message}</div>}
-            </div>
-
-            <div className="mb-3">
-              <label className="form-label fw-bold mb-3">
-                <i className="bi bi-recycle me-2"></i>Tipos de Material Aceitos
-              </label>
-              <div className="row">
-                <div className="col-md-3 mb-2">
-                  <div className="material-checkbox">
-                    <div className="form-check">
-                      <input className="form-check-input" type="checkbox" id="papel" {...register('materiais.papel')} />
-                      <label className="form-check-label" htmlFor="papel">
-                        <i className="bi bi-file-text me-2 text-primary"></i>Papel
-                      </label>
-                    </div>
-                  </div>
+            {/* CEP + Número */}
+            <div className="row g-3 mb-3">
+              <div className="col-md-4">
+                <div className="form-floating">
+                  <input type="text" className={`form-control ${errors.cep ? 'is-invalid' : ''}`}
+                    id="cep" placeholder="00000-000" maxLength="9" style={inputStyle}
+                    {...register('cep', { required: 'CEP é obrigatório' })}
+                    onBlur={e => buscarCep(e.target.value, setValue)} />
+                  <label htmlFor="cep"><i className="bi bi-mailbox me-2"></i>CEP</label>
+                  {errors.cep && <div className="invalid-feedback">{errors.cep.message}</div>}
                 </div>
-                <div className="col-md-3 mb-2">
-                  <div className="material-checkbox">
-                    <div className="form-check">
-                      <input className="form-check-input" type="checkbox" id="plastico" {...register('materiais.plastico')} />
-                      <label className="form-check-label" htmlFor="plastico">
-                        <i className="bi bi-cup me-2 text-warning"></i>Plástico
-                      </label>
-                    </div>
-                  </div>
+              </div>
+              <div className="col-md-4">
+                <div className="form-floating">
+                  <input type="text" className={`form-control ${errors.numero ? 'is-invalid' : ''}`}
+                    id="numero" placeholder="Número" maxLength="10" style={inputStyle}
+                    {...register('numero', { required: 'Número é obrigatório' })} />
+                  <label htmlFor="numero"><i className="bi bi-hash me-2"></i>Número</label>
+                  {errors.numero && <div className="invalid-feedback">{errors.numero.message}</div>}
                 </div>
-                <div className="col-md-3 mb-2">
-                  <div className="material-checkbox">
-                    <div className="form-check">
-                      <input className="form-check-input" type="checkbox" id="vidro" {...register('materiais.vidro')} />
-                      <label className="form-check-label" htmlFor="vidro">
-                        <i className="bi bi-cup-straw me-2 text-success"></i>Vidro
-                      </label>
-                    </div>
-                  </div>
-                </div>
-                <div className="col-md-3 mb-2">
-                  <div className="material-checkbox">
-                    <div className="form-check">
-                      <input className="form-check-input" type="checkbox" id="metal" {...register('materiais.metal')} />
-                      <label className="form-check-label" htmlFor="metal">
-                        <i className="bi bi-gear me-2 text-secondary"></i>Metal
-                      </label>
-                    </div>
-                  </div>
+              </div>
+              <div className="col-md-4">
+                <div className="form-floating">
+                  <input type="text" className="form-control" id="complemento"
+                    placeholder="Complemento" maxLength="50" style={inputStyle}
+                    {...register('complemento')} />
+                  <label htmlFor="complemento"><i className="bi bi-house me-2"></i>Complemento</label>
                 </div>
               </div>
             </div>
 
-
-
+            {/* Logradouro (auto) */}
             <div className="form-floating mb-3">
-              <input
-                type="text"
-                className={`form-control ${errors.horaFuncionamento ? 'is-invalid' : ''}`}
-                id="horaFuncionamento"
-                placeholder="Ex: 08:00 às 18:00"
-                maxLength="200"
-                {...register('horaFuncionamento', { required: 'Horário de funcionamento é obrigatório' })}
-              />
-              <label htmlFor="horaFuncionamento">
-                <i className="bi bi-clock me-2"></i>Horário de Funcionamento
-              </label>
-              {errors.horaFuncionamento && <div className="invalid-feedback">{errors.horaFuncionamento.message}</div>}
+              <input type="text" className="form-control" id="logradouro"
+                placeholder="Preenchido pelo CEP" readOnly
+                style={{...inputStyle, background: '#f3f4f6', color: '#6b7280'}}
+                {...register('logradouro')} />
+              <label htmlFor="logradouro"><i className="bi bi-signpost me-2"></i>Endereço (preenchido pelo CEP)</label>
             </div>
 
-            <div className="form-floating mb-3">
-              <input
-                type="email"
-                className="form-control"
-                id="email"
-                placeholder="ponto@email.com"
-                maxLength="50"
-                {...register('email')}
-              />
-              <label htmlFor="email">
-                <i className="bi bi-envelope me-2"></i>Email do Ponto
+            {/* Materiais */}
+            <div className="mb-3">
+              <label className="form-label fw-bold mb-2">
+                <i className="bi bi-recycle me-2 text-success"></i>Materiais Aceitos <span className="text-danger">*</span>
               </label>
+              <div className="row g-2">
+                {[
+                  { id: 'papel', label: '📄 Papel', color: '#3b82f6' },
+                  { id: 'plastico', label: '🥤 Plástico', color: '#ef4444' },
+                  { id: 'vidro', label: '🍶 Vidro', color: '#10b981' },
+                  { id: 'metal', label: '🥫 Metal', color: '#f59e0b' },
+                  { id: 'eletronico', label: '📱 Eletrônico', color: '#8b5cf6' },
+                  { id: 'organico', label: '🌱 Orgânico', color: '#84cc16' },
+                ].map(m => (
+                  <div key={m.id} className="col-md-4 col-6">
+                    <div className="form-check p-3 rounded-3" style={{background: '#f9fafb', border: '2px solid #e5e7eb', transition: 'all 0.2s'}}>
+                      <input className="form-check-input" type="checkbox" id={m.id}
+                        {...register(`materiais.${m.id}`)} />
+                      <label className="form-check-label fw-medium" htmlFor={m.id}>{m.label}</label>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
 
-            <div className="form-floating mb-3">
-              <input
-                type="tel"
-                className="form-control"
-                id="telefone"
-                placeholder="(00) 00000-0000"
-                maxLength="20"
-                {...register('telefone')}
-              />
-              <label htmlFor="telefone">
-                <i className="bi bi-telephone me-2"></i>Telefone
-              </label>
+            {/* Horário + Telefone */}
+            <div className="row g-3 mb-3">
+              <div className="col-md-6">
+                <div className="form-floating">
+                  <input type="text" className={`form-control ${errors.horaFuncionamento ? 'is-invalid' : ''}`}
+                    id="horaFuncionamento" placeholder="Ex: 08:00 às 18:00" maxLength="100" style={inputStyle}
+                    {...register('horaFuncionamento', { required: 'Horário é obrigatório' })} />
+                  <label htmlFor="horaFuncionamento"><i className="bi bi-clock me-2"></i>Horário de Funcionamento</label>
+                  {errors.horaFuncionamento && <div className="invalid-feedback">{errors.horaFuncionamento.message}</div>}
+                </div>
+              </div>
+              <div className="col-md-6">
+                <div className="form-floating">
+                  <input type="tel" className="form-control" id="telefone"
+                    placeholder="(00) 00000-0000" maxLength="20" style={inputStyle}
+                    {...register('telefone')} />
+                  <label htmlFor="telefone"><i className="bi bi-telephone me-2"></i>Telefone (opcional)</label>
+                </div>
+              </div>
             </div>
 
-            <div className="form-floating mb-4">
-              <input
-                type="password"
-                className={`form-control ${errors.senha ? 'is-invalid' : ''}`}
-                id="senha"
-                placeholder="Senha para login"
-                maxLength="50"
-                {...register('senha', { required: 'Senha é obrigatória' })}
-              />
-              <label htmlFor="senha">
-                <i className="bi bi-lock me-2"></i>Senha do Ponto
+            {/* Email — visível apenas para admin */}
+            {usuario?.dados?.nivelAcesso === 'ADMIN' && (
+              <div className="form-floating mb-3">
+                <input type="email" className="form-control" id="emailPonto"
+                  placeholder="email@usuario.com" maxLength="100" style={inputStyle}
+                  {...register('emailPonto')} />
+                <label htmlFor="emailPonto"><i className="bi bi-envelope me-2"></i>Email do dono do ponto (opcional)</label>
+                <small className="text-muted">Se informado, o ponto será vinculado a esse usuário</small>
+              </div>
+            )}
+
+            {/* Descrição */}
+            <div className="mb-3">
+              <label className="form-label fw-medium">
+                <i className="bi bi-card-text me-2 text-success"></i>Descrição do Ponto (opcional)
               </label>
-              {errors.senha && <div className="invalid-feedback">{errors.senha.message}</div>}
+              <textarea className="form-control" id="descricao" rows={3}
+                placeholder="Descreva o ponto de coleta, como chegar, observações importantes..."
+                maxLength="500" style={{...inputStyle, resize: 'none'}}
+                {...register('descricao')} />
+              <small className="text-muted">Ajuda os usuários a encontrar e entender o ponto</small>
             </div>
 
             <div className="d-grid">
-              <button type="submit" className="btn btn-cadastro-ponto text-white" disabled={loading}>
+              <button type="submit" className="btn btn-success py-3 fw-bold" disabled={loading}
+                style={{borderRadius: '12px', background: 'linear-gradient(135deg, #10b981, #059669)', border: 'none'}}>
                 {loading ? (
-                  <>
-                    <span className="spinner-border spinner-border-sm me-2" role="status"></span>
-                    Cadastrando...
-                  </>
+                  <><span className="spinner-border spinner-border-sm me-2"></span>Enviando para análise...</>
                 ) : (
-                  <>
-                    <i className="bi bi-plus-circle me-2"></i>
-                    Cadastrar Ponto
-                  </>
+                  <><i className="bi bi-send me-2"></i>Enviar para Aprovação</>
                 )}
               </button>
             </div>
           </form>
         </div>
       </div>
-      
-
     </div>
   );
 }

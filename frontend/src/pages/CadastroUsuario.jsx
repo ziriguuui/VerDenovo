@@ -15,7 +15,7 @@ function CadastroUsuario() {
   const [mostrarSenha, setMostrarSenha] = useState(false);
   const [mostrarConfirmarSenha, setMostrarConfirmarSenha] = useState(false);
   const navigate = useNavigate();
-  const { loginUsuario, cadastrarUsuario } = useAuth();
+  const { cadastrarUsuario } = useAuth();
 
   const styles = `
     .cadastro-container {
@@ -121,6 +121,12 @@ function CadastroUsuario() {
 
     if (formData.senha !== formData.confirmarSenha) {
       setErro('As senhas não coincidem');
+      setCarregando(false);
+      return;
+    }
+
+    if (passwordStrength < 50) {
+      setErro('Use uma senha mais forte. Inclua letras maiúsculas, números ou símbolos.');
       setCarregando(false);
       return;
     }

@@ -28,6 +28,15 @@ public class Usuario {
     @Column(name = "status_usuario", nullable = false, length = 20)
     private String statusUsuario;
 
+    @Column(name = "reset_token", length = 100)
+    private String resetToken;
+
+    @Column(name = "reset_token_expiry")
+    private LocalDateTime resetTokenExpiry;
+
+    @Column(name = "reset_code", length = 6)
+    private String resetCode;
+
     // Getters e Setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
@@ -49,4 +58,13 @@ public class Usuario {
     
     public String getStatusUsuario() { return statusUsuario; }
     public void setStatusUsuario(String statusUsuario) { this.statusUsuario = statusUsuario; }
+
+    public String getResetToken() { return resetToken; }
+    public void setResetToken(String resetToken) { this.resetToken = resetToken; }
+
+    public LocalDateTime getResetTokenExpiry() { return resetTokenExpiry; }
+    public void setResetTokenExpiry(LocalDateTime resetTokenExpiry) { this.resetTokenExpiry = resetTokenExpiry; }
+
+    public String getResetCode() { return resetCode; }
+    public void setResetCode(String resetCode) { this.resetCode = resetCode; }
 }

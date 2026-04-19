@@ -8,4 +8,5 @@ import java.util.Optional;
 public interface PontoRepository extends JpaRepository<Ponto, Long> {
     List<Ponto> findByStatusPonto(String statusPonto);
     Optional<Ponto> findByEmailAndStatusPonto(String email, String statusPonto);
+    List<Ponto> findByUsuarioId(Long usuarioId);
 }
