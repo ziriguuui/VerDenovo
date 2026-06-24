@@ -54,6 +54,15 @@ public class Ponto {
     @Column(name = "usuario_id")
     private Long usuarioId;
 
+    @Column(name = "categoria_id")
+    private Long categoriaId;
+
+    @Column
+    private Double latitude;
+
+    @Column
+    private Double longitude;
+
     // Getters e Setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
@@ -99,4 +108,13 @@ public class Ponto {
 
     public Long getUsuarioId() { return usuarioId; }
     public void setUsuarioId(Long usuarioId) { this.usuarioId = usuarioId; }
+
+    public Long getCategoriaId() { return categoriaId; }
+    public void setCategoriaId(Long categoriaId) { this.categoriaId = categoriaId; }
+
+    public Double getLatitude() { return latitude; }
+    public void setLatitude(Double latitude) { this.latitude = latitude; }
+
+    public Double getLongitude() { return longitude; }
+    public void setLongitude(Double longitude) { this.longitude = longitude; }
 }

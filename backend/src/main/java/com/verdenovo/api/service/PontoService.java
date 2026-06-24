@@ -1,16 +1,23 @@
 package com.verdenovo.api.service;
 
+import com.verdenovo.api.entity.Categoria;
 import com.verdenovo.api.entity.Ponto;
+import com.verdenovo.api.repository.CategoriaRepository;
 import com.verdenovo.api.repository.PontoRepository;
 import com.verdenovo.api.repository.UsuarioRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.Objects;
 
 @Service
 public class PontoService {
+
+    private static final Logger log = LoggerFactory.getLogger(PontoService.class);
 
     @Autowired
     private PontoRepository pontoRepository;
@@ -19,7 +26,13 @@ public class PontoService {
     private UsuarioRepository usuarioRepository;
 
     @Autowired
+    private CategoriaRepository categoriaRepository;
+
+    @Autowired
     private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private GeocodingService geocodingService;
 
     public Ponto loginPonto(String email, String senha) {
         Ponto ponto = pontoRepository.findByEmailAndStatusPonto(email, "ATIVO")
@@ -42,6 +55,11 @@ public class PontoService {
                 throw new RuntimeException("Sem permissão para editar este ponto.");
             }
         }
+
+        boolean enderecoMudou = !Objects.equals(ponto.getCep(), pontoAtualizado.getCep())
+                || !Objects.equals(ponto.getNumero(), pontoAtualizado.getNumero())
+                || !Objects.equals(ponto.getLogradouro(), pontoAtualizado.getLogradouro());
+
         ponto.setNome(pontoAtualizado.getNome());
         ponto.setCep(pontoAtualizado.getCep());
         ponto.setNumero(pontoAtualizado.getNumero());
@@ -51,6 +69,11 @@ public class PontoService {
         ponto.setHoraFuncionamento(pontoAtualizado.getHoraFuncionamento());
         ponto.setMaterial(pontoAtualizado.getMaterial());
         ponto.setDescricao(pontoAtualizado.getDescricao());
+
+        if (enderecoMudou) {
+            geocodificarEAtribuir(ponto);
+        }
+
         return pontoRepository.save(ponto);
     }
 
@@ -68,8 +91,41 @@ public class PontoService {
         codificarSenha(ponto);
         ponto.setDataCadastro(LocalDateTime.now());
         if (ponto.getStatusPonto() == null) ponto.setStatusPonto("PENDENTE");
+        if (ponto.getCategoriaId() == null) {
+            ponto.setCategoriaId(obterCategoriaPadraoId());
+        }
+
+        geocodificarEAtribuir(ponto);
 
         return pontoRepository.save(ponto);
+    }
+
+    /**
+     * Tenta encontrar as coordenadas do endereço informado e preenche latitude/longitude
+     * do Ponto. Se a geocodificação falhar (sem internet, endereço não encontrado etc.),
+     * o cadastro continua normalmente sem coordenadas — o ponto só não terá pin no mapa
+     * do app mobile até ser corrigido.
+     */
+    private void geocodificarEAtribuir(Ponto ponto) {
+        geocodingService.geocodificar(ponto.getLogradouro(), ponto.getNumero(), ponto.getCep())
+                .ifPresentOrElse(coords -> {
+                    ponto.setLatitude(coords.latitude());
+                    ponto.setLongitude(coords.longitude());
+                }, () -> log.info("Não foi possível geocodificar o endereço do ponto '{}'", ponto.getNome()));
+    }
+
+    /**
+     * Retorna o id da categoria padrão ("Geral", criada automaticamente pelo DataInitializer)
+     * para pontos cadastrados sem categoria específica. Se por algum motivo ela não existir,
+     * cai para a primeira categoria ativa disponível.
+     */
+    private Long obterCategoriaPadraoId() {
+        return categoriaRepository.findByStatusCategoria("ATIVO").stream()
+                .filter(c -> "Geral".equalsIgnoreCase(c.getNome()))
+                .findFirst()
+                .or(() -> categoriaRepository.findByStatusCategoria("ATIVO").stream().findFirst())
+                .map(Categoria::getId)
+                .orElse(null);
     }
 
     private void vincularPontoAdmin(Ponto ponto, String emailLogado) {
