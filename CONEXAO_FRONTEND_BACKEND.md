@@ -50,17 +50,23 @@ npm run dev
 ## Credenciais de teste
 
 ### Admin
-- Email: admin@verdenovo.com
-- Senha: admin123
+- Email: definido pela variável de ambiente `ADMIN_EMAIL` (ver `.env.example`)
+- Senha: definida pela variável de ambiente `ADMIN_SENHA`
 
 ### Banco de dados
-- Servidor: VerdNovo.mssql.somee.com
-- Usuário: fernando14112008@gmail.com
-- Senha: 12345678f
+⚠️ **As credenciais de conexão NÃO ficam neste arquivo.** Elas são configuradas
+exclusivamente via variáveis de ambiente (`DB_URL`, `DB_USERNAME`, `DB_PASSWORD`
+em `.env`, nunca commitado — ver `.env.example`).
+
+> 🚨 **Aviso de segurança:** uma versão anterior deste arquivo continha o
+> host, usuário e senha reais do banco SQL Server (Somee) em texto puro,
+> em um repositório público. Se você ainda usa essa senha, **troque-a
+> imediatamente** no painel do Somee — qualquer pessoa que tenha visto o
+> repositório antes desta correção teve acesso a ela.
 
 ## Status da integração
 ✅ Backend funcionando
 ✅ Frontend conectado
 ✅ Autenticação integrada
-✅ CRUD de pontos integrado
+✅ CRUD de pontos integrado (categoria padrão automática + geocodificação de endereço)
 ✅ Sistema completo operacional

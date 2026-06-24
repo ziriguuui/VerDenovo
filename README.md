@@ -73,8 +73,9 @@ src/
 
 ## Banco de Dados
 
-O projeto utiliza SQL Server hospedado na Somee Cloud:
-- **Servidor**: VerdNovo.mssql.somee.com
+O projeto utiliza SQL Server. As credenciais de conexão ficam apenas em
+variáveis de ambiente (`DB_URL`, `DB_USERNAME`, `DB_PASSWORD` no `.env` do
+backend, nunca commitadas).
 - **Banco**: VerdNovo
 - **Tabelas**: Usuario, Categoria, Ponto
 - **Autenticação**: JWT com BCrypt
