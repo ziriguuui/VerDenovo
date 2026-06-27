@@ -138,7 +138,7 @@ function PersonalizarPonto() {
       const pontoId = dadosAtual?.id || pontoIdFallback;
       const dadosParaSalvar = {
         nome: formData.nome,
-        cep: formData.cep,
+        cep: formData.cep.replace(/\D/g, ''),
         numero: formData.numero,
         logradouro: formData.endereco,
         complemento: formData.complemento,
