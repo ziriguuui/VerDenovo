@@ -17,16 +17,22 @@ import java.util.Optional;
 
 /**
  * Converte um endereço (CEP + logradouro + número) em coordenadas de latitude/longitude,
- * tentando, em ordem, três fontes gratuitas e sem necessidade de chave de API:
+ * tentando, em ordem, fontes gratuitas e sem necessidade de chave de API:
  *
  *  1) BrasilAPI (CEP v2) — específica para CEPs brasileiros, geralmente mais precisa
  *     para o caso de uso daqui do que uma busca genérica por texto.
  *  2) Nominatim (OpenStreetMap), busca estruturada só pelo CEP — evita ambiguidade de
  *     nomes de rua repetidos em cidades diferentes.
  *  3) Nominatim, busca livre pelo endereço completo (rua + número + bairro/cidade) —
- *     último recurso, usada apenas se as duas anteriores não encontrarem nada.
+ *     usada quando as duas anteriores não encontram nada (comum em condomínios/
+ *     loteamentos fechados, que costumam não estar bem mapeados nessas bases).
+ *  4) Nominatim, busca só por "Cidade/UF" — último recurso. Não é a posição exata do
+ *     endereço, mas garante que o ponto apareça no mapa (ao menos na cidade certa) em
+ *     vez de simplesmente não aparecer. Um pequeno deslocamento aleatório (porém fixo
+ *     para o mesmo endereço) evita que vários pontos "aproximados" da mesma cidade
+ *     fiquem todos exatamente um em cima do outro no mapa.
  *
- * Se todas falharem (sem internet, endereço não encontrado, APIs fora do ar etc.),
+ * Se todas falharem (sem internet, cidade não encontrada, APIs fora do ar etc.),
  * o método retorna Optional.empty() e o cadastro do Ponto continua normalmente sem
  * coordenadas — o ponto simplesmente não aparece no mapa do app mobile até ser
  * corrigido/re-geocodificado (o que acontece automaticamente no próximo restart do
@@ -59,8 +65,45 @@ public class GeocodingService {
         }
 
         String enderecoLivre = montarEnderecoLivre(logradouro, numero, cepLimpo);
-        if (enderecoLivre.isBlank()) return Optional.empty();
-        return tentarNominatim("q=" + URLEncoder.encode(enderecoLivre, StandardCharsets.UTF_8));
+        if (!enderecoLivre.isBlank()) {
+            Optional<Coordenadas> viaEnderecoLivre =
+                    tentarNominatim("q=" + URLEncoder.encode(enderecoLivre, StandardCharsets.UTF_8));
+            if (viaEnderecoLivre.isPresent()) return viaEnderecoLivre;
+        }
+
+        return geocodificarPorCidade(logradouro);
+    }
+
+    /**
+     * Último recurso: geocodifica só a cidade/UF extraída do logradouro (ex: "Barueri/SP"),
+     * com um pequeno deslocamento aleatório (mas fixo para o mesmo endereço) para não
+     * empilhar vários pinos exatamente no mesmo ponto do mapa.
+     */
+    private Optional<Coordenadas> geocodificarPorCidade(String logradouro) {
+        String cidadeUf = extrairCidadeUf(logradouro);
+        if (cidadeUf.isBlank()) return Optional.empty();
+
+        Optional<Coordenadas> resultado =
+                tentarNominatim("q=" + URLEncoder.encode(cidadeUf + ", Brasil", StandardCharsets.UTF_8));
+        if (resultado.isEmpty()) return Optional.empty();
+
+        // Deslocamento de até ~600m, determinístico por endereço (mesmo texto -> mesmo
+        // deslocamento), só para os pinos aproximados não ficarem todos sobrepostos.
+        java.util.Random rnd = new java.util.Random(logradouro.hashCode());
+        double jitterLat = (rnd.nextDouble() - 0.5) * 0.01;
+        double jitterLon = (rnd.nextDouble() - 0.5) * 0.01;
+        Coordenadas base = resultado.get();
+        log.info("Endereço '{}' não encontrado com precisão; usando aproximação por cidade ({})", logradouro, cidadeUf);
+        return Optional.of(new Coordenadas(base.latitude() + jitterLat, base.longitude() + jitterLon));
+    }
+
+    /** Extrai "Cidade/UF" do final do logradouro (formato: "Rua, Bairro - Cidade/UF"). */
+    private String extrairCidadeUf(String logradouro) {
+        if (logradouro == null || logradouro.isBlank()) return "";
+        String[] partes = logradouro.split(" - ");
+        String ultima = partes[partes.length - 1].trim();
+        // Confirma que parece mesmo "Cidade/UF" (tem uma barra com 2 letras de UF depois)
+        return ultima.matches(".+/[A-Za-z]{2}$") ? ultima : "";
     }
 
     /** Fonte 1: BrasilAPI — dados específicos de CEPs do Brasil. */
