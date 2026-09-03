@@ -101,7 +101,7 @@ function GerenciarContas() {
     try {
       await apiService.atualizarPonto(editando.id, {
         nome: editando.nome,
-        cep: (editando.cep || '').replace(/\D/g, ''),
+        cep: editando.cep,
         logradouro: editando.logradouro,
         numero: editando.numero,
         complemento: editando.complemento,
