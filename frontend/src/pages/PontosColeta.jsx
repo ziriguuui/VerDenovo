@@ -441,8 +441,7 @@ function PontosColeta() {
             style={{ backgroundColor: 'rgba(0,0,0,0.6)', zIndex: 1050, backdropFilter: 'blur(8px)' }}
             onClick={e => e.target === e.currentTarget && setPontoSelecionado(null)}>
             <div className="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable" style={{ margin: '1.5rem auto' }}>
-              <div className="modal-content modal-pontos-content border-0" style={{ borderRadius: '28px', overflow: 'hidden', boxShadow: '8px 8px 0px rgba(0,0,0,0.15), 0 32px 80px rgba(0,0,0,0.20)', border: '2px solid rgba(255,255,255,0.6)' }}>
-
+                <div className="modal-content modal-pontos-content border-0" style={{ borderRadius: '28px', overflow: 'hidden', boxShadow: '8px 8px 0px rgba(0,0,0,0.15), 0 32px 80px rgba(0,0,0,0.20)', border: '2px solid rgba(255,255,255,0.6)', display: 'flex', flexDirection: 'column', maxHeight: '85vh' }}> 
               {/* Header */}
               <div style={{ background: 'linear-gradient(135deg, #052e16 0%, #064e3b 50%, #065f46 100%)', padding: '2.25rem 2rem 2rem', boxShadow: '0 4px 20px rgba(0,0,0,0.15)' }}>
                 <div className="d-flex align-items-center gap-3">
@@ -475,7 +474,9 @@ function PontosColeta() {
                   </button>
                 </div>
               </div>
-
+                  
+                <div style={{ overflowY: 'auto', flex: '1 1 auto', minHeight: 0 }}>
+              
               {/* Stats bar */}
               <div className="modal-pontos-stats" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', borderBottom: '1px solid #f0f0f0', background: '#f8fafc', padding: '1.25rem 1.5rem', gap: '0.75rem' }}>
                 {[
@@ -595,7 +596,7 @@ function PontosColeta() {
 
                 </div>
               </div>
-
+            </div>
               {/* Footer */}
               <div style={{ padding: '0 2rem 2rem', display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
                 <ModalButton
