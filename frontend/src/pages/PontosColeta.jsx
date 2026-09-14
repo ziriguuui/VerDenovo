@@ -230,29 +230,7 @@ function LocationField({ label, icon, value }) {
   );
 }
 
-function MapsButton({ onClick }) {
-  const [hovered, setHovered] = useState(false);
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      style={{
-        width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
-        padding: '12px', borderRadius: '14px', fontSize: '0.88rem', fontWeight: 700,
-        border: 'none', cursor: 'pointer', letterSpacing: '0.01em',
-        background: hovered ? 'linear-gradient(135deg, #047857, #059669)' : 'linear-gradient(135deg, #059669, #10b981)',
-        color: 'white',
-        boxShadow: hovered ? '0 8px 24px rgba(5,150,105,0.4)' : '0 3px 10px rgba(5,150,105,0.2)',
-        transform: hovered ? 'translateY(-2px)' : 'none',
-        transition: 'all 0.2s ease',
-      }}>
-      <i className="bi bi-map-fill" style={{ fontSize: '1rem' }}></i>
-      Abrir no Google Maps
-    </button>
-  );
-}
+
 
 function PontosColeta() {
   const [pontos, setPontos] = useState([]);
@@ -557,7 +535,7 @@ function PontosColeta() {
                       )}
                     </div>
 
-                    <MapsButton onClick={() => abrirMaps(pontoSelecionado)} />
+                    
                   </div>
 
                   {/* Materiais */}
@@ -620,14 +598,6 @@ function PontosColeta() {
 
               {/* Footer */}
               <div style={{ padding: '0 2rem 2rem', display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-                <ModalButton
-                  onClick={() => pontoSelecionado.telefone && window.open(`tel:${pontoSelecionado.telefone}`)}
-                  disabled={!pontoSelecionado.telefone}
-                  variant="outline"
-                  icon="bi-telephone-fill"
-                  label="Ligar"
-                  style={{ flex: 1, minWidth: '100px' }}
-                />
                 <ModalButton
                   onClick={() => abrirMaps(pontoSelecionado)}
                   variant="primary"
